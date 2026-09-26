@@ -219,7 +219,7 @@
         <input type="text" id="who" placeholder="So we can follow up">
       </div>
       <div>
-        <label for="phone" class="muted">Phone model (if you know it)</label>
+        <label for="phone" class="muted">Phone model (leave blank if the detection is right)</label>
         <input type="text" id="phone" placeholder="Detected automatically">
       </div>
     </div>
@@ -549,16 +549,52 @@
   }
 
   // ---------------------------------------------------------------- device info
+  // Chrome no longer puts the real phone model in the user agent - it substitutes "K",
+  // and it freezes the Android version at "10". The client hints API still carries the
+  // truth, so ask for it on load; by the time anyone finishes the form it has arrived.
+  var DEVICE_HINTS = null;
+  (function () {
+    try {
+      if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+        navigator.userAgentData.getHighEntropyValues(["model", "platformVersion", "platform"])
+          .then(function (h) { DEVICE_HINTS = h; refreshPhoneHint(); })
+          .catch(function () {});
+      }
+    } catch (e) {}
+  })();
+
   function device() {
     var ua = navigator.userAgent || "";
     var model = "";
-    var m = ua.match(/Android[^;]*;\s*([^)]+?)(?:\s+Build|\))/i);
-    if (m) { model = m[1].trim(); }
+    if (ua.indexOf("iPad") >= 0) { model = "iPad"; }
+    else if (ua.indexOf("iPhone") >= 0) { model = "iPhone"; }
+    else {
+      var m = ua.match(/Android[^;]*;\s*([^)]+?)(?:\s+Build|\))/i);
+      if (m) { model = m[1].trim(); }
+    }
     var av = (ua.match(/Android\s+([\d.]+)/i) || [])[1] || "";
+    if (DEVICE_HINTS) {
+      if (DEVICE_HINTS.model) { model = DEVICE_HINTS.model; }
+      if (DEVICE_HINTS.platformVersion) { av = String(DEVICE_HINTS.platformVersion).split(".")[0]; }
+    }
+    // a bare "K" is the placeholder Chrome sends when the hints are unavailable
+    if (!model || /^k$/i.test(model)) { model = ""; }
+    var dpr = window.devicePixelRatio || 1;
     return { model: model, android: av, ua: ua,
-             screen: (window.screen ? screen.width + "x" + screen.height : ""),
-             dpr: window.devicePixelRatio || 1 };
+             screen: (window.screen
+               ? Math.round(screen.width * dpr) + "x" + Math.round(screen.height * dpr)
+               : ""),
+             dpr: dpr };
   }
+
+  // show the tester what was detected, so a wrong model is visible before they send
+  function refreshPhoneHint() {
+    var el = document.getElementById("phone");
+    if (!el || el.value) { return; }
+    var d = device();
+    el.placeholder = d.model ? ("Detected: " + d.model) : "Not detected - type it if you know it";
+  }
+  setTimeout(refreshPhoneHint, 2000);
 
   // ---------------------------------------------------------------- payload
   function payload() {
