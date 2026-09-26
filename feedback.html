@@ -575,7 +575,12 @@
     var av = (ua.match(/Android\s+([\d.]+)/i) || [])[1] || "";
     if (DEVICE_HINTS) {
       if (DEVICE_HINTS.model) { model = DEVICE_HINTS.model; }
-      if (DEVICE_HINTS.platformVersion) { av = String(DEVICE_HINTS.platformVersion).split(".")[0]; }
+      // platformVersion is the OS version, so it only belongs in the Android column
+      // when the OS is actually Android - on Windows it would read "19"
+      var isAndroid = String(DEVICE_HINTS.platform || "") === "Android" || /Android/i.test(ua);
+      if (isAndroid && DEVICE_HINTS.platformVersion) {
+        av = String(DEVICE_HINTS.platformVersion).split(".")[0];
+      }
     }
     // a bare "K" is the placeholder Chrome sends when the hints are unavailable
     if (!model || /^k$/i.test(model)) { model = ""; }
