@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compress Image Online to Any Size — Free, No Signup, No Upload | NazByte</title>
+<meta name="description" content="Compress JPG, PNG and WebP images to any exact file size in your browser. Unlimited, free, no account, and your files are never uploaded.">
+<link rel="canonical" href="https://nazbyte.com/tools/compress-image/">
+<meta name="theme-color" content="#0A0D18">
+<link rel="icon" href="../../favicon.png" type="image/png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Compress an Image to Any Size">
+<meta property="og:description" content="Compress JPG, PNG and WebP images to any exact file size in your browser. Unlimited, free, no account, and your files are never uploaded.">
+<link rel="stylesheet" href="../../assets/tool.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"NazByte","item":"https://nazbyte.com/"},{"@type":"ListItem","position":2,"name":"Free tools","item":"https://nazbyte.com/tools/"},{"@type":"ListItem","position":3,"name":"Compress an Image to Any Size","item":"https://nazbyte.com/tools/compress-image/"}]},{"@type":"WebApplication","name":"Compress an Image to Any Size","url":"https://nazbyte.com/tools/compress-image/","applicationCategory":"MultimediaApplication","operatingSystem":"Any browser","description":"Compress JPG, PNG and WebP images to any exact file size in your browser. Unlimited, free, no account, and your files are never uploaded.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Compress images to an exact target file size","Runs entirely in the browser, files are never uploaded","No account and no daily limit","Batch processing of multiple images"]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I compress an image to an exact size like 100 KB?","acceptedAnswer":{"@type":"Answer","text":"Yes. Type the target size in KB and the tool will not stop until the output is at or below it. For JPG and WebP it does this by finding the highest quality that still fits. For PNG it reduces the colour palette and, if needed, the dimensions."}},{"@type":"Question","name":"Why is there no signup or limit?","acceptedAnswer":{"@type":"Answer","text":"Because everything happens inside your browser. There is no server doing the work, so there is no cost per file and no reason to ration it."}},{"@type":"Question","name":"Can I compress several images at once?","acceptedAnswer":{"@type":"Answer","text":"Yes \u2014 drop in as many as you like and all of them are compressed to the same target size. There is no file-count limit."}},{"@type":"Question","name":"Which format should I choose?","acceptedAnswer":{"@type":"Answer","text":"JPG or WebP for photographs, PNG for logos, signatures and screenshots with flat colours. WebP usually produces the smallest file for the same visible quality, and every modern browser supports it."}},{"@type":"Question","name":"Does it work on my phone?","acceptedAnswer":{"@type":"Answer","text":"Yes. The tool runs in any modern browser on Android and iPhone, and nothing is uploaded so it works even on a slow connection."}}]}]}</script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../../index.html">
+      <img src="../../nazbyte-dev-logo.png" alt="NazByte" width="34" height="34">
+      <span>NazByte</span>
+    </a>
+    <nav class="nav-links">
+      <a href="../../tools/index.html">All tools</a>
+      <a href="../../index.html#work">Work</a>
+      <a href="../../index.html#services">Services</a>
+      <a href="../../index.html#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <p class="crumbs"><a href="../../index.html">Home</a> / <a href="../../tools/index.html">Tools</a> / Compress image</p>
+    <span class="pill">Free &middot; No signup &middot; No limits</span>
+    <h1>Compress an Image to Any Size</h1>
+    <p class="lede">Choose a target size, drop in your images, and get files that fit. JPG, PNG and WebP, in bulk, free, with no account and no daily limit.</p>
+  </div>
+  
+  
+<div class="nz-tool" data-nz-compressor>
+  <div class="nz-drop" data-nz-drop>
+    <strong>Drop your images here</strong>
+    <div><button type="button" class="btn btn-ghost" data-nz-browse>Choose images</button></div>
+    <input type="file" data-nz-input accept="image/*" multiple hidden>
+    <small>JPG &middot; PNG &middot; WebP &middot; as many files as you like &middot; nothing is uploaded</small>
+  </div>
+
+  <div class="nz-controls">
+    <div class="nz-field">
+      <label for="tgt">Target size (KB)</label>
+      <div class="nz-target-row">
+        <input id="tgt" type="number" min="1" step="1" value="100" data-nz-target>
+        <span class="muted">KB or less</span>
+      </div>
+      <div class="nz-chips"><button type="button" data-nz-preset="20">20 KB</button><button type="button" data-nz-preset="25">25 KB</button><button type="button" data-nz-preset="30">30 KB</button><button type="button" data-nz-preset="50">50 KB</button><button type="button" data-nz-preset="100" class="on">100 KB</button><button type="button" data-nz-preset="200">200 KB</button><button type="button" data-nz-preset="500">500 KB</button></div>
+    </div>
+    <div class="nz-field">
+      <label for="fmt">Output format</label>
+      <select id="fmt" data-nz-format>
+        <option value="keep">Keep original format</option>
+        <option value="jpeg">JPG &mdash; best for photos</option>
+        <option value="webp">WebP &mdash; smallest for photos</option>
+        <option value="png">PNG &mdash; for logos and flat colour</option>
+      </select>
+      <small class="muted">Photos: JPG or WebP. Logos, signatures and screenshots: PNG.</small>
+    </div>
+  </div>
+
+  <div class="nz-list" data-nz-list></div>
+
+  <div class="nz-foot">
+    <span class="nz-summary" data-nz-summary></span>
+    <button type="button" class="btn btn-primary" data-nz-download-all hidden>Download all</button>
+  </div>
+  <p class="nz-note">
+    Your images are processed by your own browser. Nothing is uploaded, there is no account,
+    and there is no daily limit.
+  </p>
+</div>
+
+
+  <section>
+    <h2>How it works</h2>
+    <p>Almost every online compressor gives you a quality slider and hopes for the best. That is
+    useless when a form says <em>under 100 KB</em>. This tool works backwards from the number you
+    type: it keeps compressing until the file fits, then stops &mdash; so the highest quality that
+    still meets the limit is the one you get.</p>
+    <ul class="steps">
+      <li><b>For JPG and WebP</b>It searches encoder quality, keeping the largest dimensions
+      possible, and only reduces the size of the image if quality alone cannot reach the target.</li>
+      <li><b>For PNG</b>PNG has no quality setting, so the tool reduces the colour palette to an
+      indexed palette and shrinks the dimensions only as far as it has to. Transparency is kept.</li>
+      <li><b>Already small enough?</b>The image is passed through untouched. Re-encoding a file
+      that already fits would only lose quality for nothing.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Nothing is uploaded. That is the point.</h2>
+    <p>Most compressors send your file to their server, process it, and send it back. That is why
+    they need size limits, daily quotas, and an account. This tool does the work in your browser
+    using the canvas and PNG encoders that are already part of it.</p>
+    <p>Your image never leaves your device. There is nothing to sign up for, nothing stored, and
+    no quota &mdash; and it keeps working if your connection drops.</p>
+    <div class="grid">
+      <div class="card"><h3>No account</h3><p>Nothing to register, no email, no login wall.</p></div>
+      <div class="card"><h3>No limits</h3><p>No daily cap, no file-count cap, no file-size cap.</p></div>
+      <div class="card"><h3>No upload</h3><p>Your files stay on your device, always.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Common target sizes</h2>
+    <p class="muted">Most upload forms want one of these. Each has its own page with the details
+    of what that size means in practice.</p>
+    <div class="sizelinks"><a href="../compress-image-to-20kb/">20 KB</a><a href="../compress-image-to-25kb/">25 KB</a><a href="../compress-image-to-30kb/">30 KB</a><a href="../compress-image-to-50kb/">50 KB</a><a href="../compress-image-to-100kb/">100 KB</a><a href="../compress-image-to-200kb/">200 KB</a><a href="../compress-image-to-500kb/">500 KB</a></div>
+  </section>
+
+  <section class="faq">
+    <h2>Questions</h2>
+    <details><summary>Can I compress an image to an exact size like 100 KB?</summary><p>Yes. Type the target size in KB and the tool will not stop until the output is at or below it. For JPG and WebP it does this by finding the highest quality that still fits. For PNG it reduces the colour palette and, if needed, the dimensions.</p></details><details><summary>Why is there no signup or limit?</summary><p>Because everything happens inside your browser. There is no server doing the work, so there is no cost per file and no reason to ration it.</p></details><details><summary>Can I compress several images at once?</summary><p>Yes — drop in as many as you like and all of them are compressed to the same target size. There is no file-count limit.</p></details><details><summary>Which format should I choose?</summary><p>JPG or WebP for photographs, PNG for logos, signatures and screenshots with flat colours. WebP usually produces the smallest file for the same visible quality, and every modern browser supports it.</p></details><details><summary>Does it work on my phone?</summary><p>Yes. The tool runs in any modern browser on Android and iPhone, and nothing is uploaded so it works even on a slow connection.</p></details>
+  </section>
+
+  <section>
+    <div class="cta">
+      <div>
+        <h2 style="margin-bottom:6px">Need a tool like this for your business?</h2>
+        <p class="muted" style="margin:0">NazByte builds small web tools and mobile apps.</p>
+      </div>
+      <a class="btn btn-primary" href="../../index.html#contact">Start a project</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <div>&copy; 2026 NazByte &middot; <a href="mailto:nazbyte.support@gmail.com">nazbyte.support@gmail.com</a></div>
+    <nav>
+      <a href="../../tools/index.html">Free tools</a>
+      <a href="../../index.html">Studio</a>
+      <a href="../../legal.html">Legal &amp; privacy</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="../../assets/compressor.js" defer></script>
+</body>
+</html>
