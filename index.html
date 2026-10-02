@@ -3,55 +3,519 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NazByte — Legal &amp; Privacy</title>
-<meta name="description" content="Privacy policies for apps published by NazByte.">
+<title>NazByte — Mobile app studio | Android &amp; iOS apps, designed and published</title>
+<meta name="description" content="NazByte is a one-person mobile app studio. React Native apps for Android and iOS — design, build, and the Google Play and App Store publishing work that goes with it.">
+<link rel="canonical" href="https://nazbyte.com/">
+<meta name="theme-color" content="#0A0D18">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="nazbyte-dev-logo.png">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://nazbyte.com/">
+<meta property="og:title" content="NazByte — Mobile app studio">
+<meta property="og:description" content="React Native apps for Android and iOS — design, build and publishing, start to finish.">
+<meta property="og:image" content="https://nazbyte.com/img/nazbyte-logo.png">
+<meta name="twitter:card" content="summary_large_image">
+
 <style>
   :root{
-    --bg:#07110D; --panel:#0C1A15; --line:#17332A;
-    --emerald:#10B981; --gold:#E0B45C; --ink:#E8F5F0; --muted:#8FB3A7;
+    --bg:#0A0D18; --panel:#111629; --panel2:#0E1223; --line:#1F2742;
+    --brand:#5A6BFF; --brand-hi:#7C8AFF; --brand-dim:rgba(90,107,255,.14);
+    --ink:#EEF1FF; --muted:#98A2C8; --faint:#6C77A0;
+    --ok:#2FBF8F; --gold:#E0B45C;
+    --r:16px; --maxw:1180px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink)}
-  body{font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:48px 20px 96px}
-  .wrap{max-width:720px;margin:0 auto}
-  .brand{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-  .devlogo{width:72px;height:72px;display:block;border-radius:18px}
-  h1{font-size:30px;line-height:1.25;margin:0 0 10px}
-  .meta{color:var(--muted);font-size:14px;margin:0 0 34px}
-  .card{display:block;text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);
-        border-radius:14px;padding:18px 20px;margin:14px 0;transition:border-color .15s ease}
-  .card:hover{border-color:var(--emerald)}
-  .card h2{font-size:17px;margin:0 0 6px;color:#fff}
-  .card p{margin:0;color:var(--muted);font-size:14px}
-  .tag{display:inline-block;font-size:12px;color:var(--gold);border:1px solid rgba(224,180,92,.4);
-       border-radius:999px;padding:2px 10px;margin-top:10px}
-  a{color:var(--emerald)}
-  footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
-  @media print{body{background:#fff;color:#111}.card{background:#f7f7f7}.meta,footer,.card p{color:#444}h1,h2{color:#000}}
+  html{scroll-behavior:smooth}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+            font:17px/1.65 var(--font);-webkit-font-smoothing:antialiased}
+  a{color:var(--brand-hi);text-decoration:none}
+  a:hover{color:#fff}
+  img{max-width:100%;height:auto;display:block}
+  /* grid/flex items must be allowed to shrink below their content's intrinsic
+     width, otherwise the 1024px feature graphic inflates the whole page and
+     the layout overflows on a phone */
+  .wrap,.nav-in,.case,.case-body,.case-media,.grid,.card,.steps,.step,
+  .contact,.facts,.fact,.work{min-width:0}
+  /* replaced elements are flex/grid items too: without this their intrinsic
+     width (the 1024px feature graphic) becomes the minimum for the track */
+  .case-media img,.grid>*,.steps>*,.facts>*{min-width:0}
+  /* phone frame: real device chrome around a full-bleed app screen */
+  .device{width:252px;flex-shrink:0;background:#05070F;border:1px solid #2A3350;
+          border-radius:34px;padding:11px 11px 15px;box-shadow:0 20px 48px rgba(0,0,0,.55)}
+  .device .notch{width:62px;height:6px;border-radius:999px;background:#1B2340;
+                 margin:0 auto 10px}
+  .device img{width:100%;border-radius:24px;display:block}
+  h1,h2,h3{line-height:1.18;margin:0;letter-spacing:-.02em}
+  .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  .section{padding:88px 0;border-top:1px solid var(--line)}
+  .section:first-of-type{border-top:0}
+  .eyebrow{display:inline-block;font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+           color:var(--brand-hi);background:var(--brand-dim);border:1px solid rgba(90,107,255,.3);
+           border-radius:999px;padding:6px 14px;margin-bottom:22px}
+  .lede{color:var(--muted);font-size:19px;max-width:70ch;margin:18px 0 0}
+
+  /* ---------- buttons ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;text-align:center;
+       gap:10px;font:600 16px/1 var(--font);padding:16px 28px;border-radius:999px;
+       border:1px solid transparent;cursor:pointer;transition:.16s ease;text-decoration:none}
+  .btn-primary{background:var(--brand);color:#fff}
+  .btn-primary:hover{background:var(--brand-hi);color:#fff;transform:translateY(-1px)}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .btn-ghost:hover{border-color:var(--brand);color:#fff}
+  .btn-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:34px}
+
+  /* ---------- nav ---------- */
+  header.nav{position:sticky;top:0;z-index:50;background:rgba(10,13,24,.88);
+             backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;gap:18px;height:74px}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;color:#fff}
+  .brand img{width:36px;height:36px;border-radius:10px}
+  .nav-links{display:flex;gap:30px;margin-left:auto;align-items:center}
+  .nav-links a{color:var(--muted);font-size:15px;font-weight:500}
+  .nav-links a:hover{color:#fff}
+  .nav-cta{color:#fff!important;font-weight:600}
+  .burger{display:none;margin-left:auto;background:none;border:1px solid var(--line);
+          border-radius:10px;width:44px;height:44px;cursor:pointer;padding:0}
+  .burger span{display:block;width:18px;height:2px;background:var(--ink);margin:4px auto;border-radius:2px}
+
+  /* ---------- hero ---------- */
+  .hero{padding:96px 0 80px;background:
+    radial-gradient(1100px 480px at 78% -8%, rgba(90,107,255,.20), transparent 62%),
+    radial-gradient(760px 420px at 6% 12%, rgba(47,191,143,.08), transparent 60%)}
+  .hero h1{font-size:clamp(36px,5.6vw,62px);max-width:20ch}
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px;
+         margin-top:56px;padding-top:34px;border-top:1px solid var(--line)}
+  .fact b{display:block;font-size:15px;color:#fff;margin-bottom:4px}
+  .fact span{color:var(--faint);font-size:14px}
+
+  /* ---------- generic grids ---------- */
+  .grid{display:grid;gap:22px;margin-top:44px}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:28px}
+  .card h3{font-size:19px;margin-bottom:10px}
+  .card p{margin:0;color:var(--muted);font-size:15.5px}
+  .ico{width:44px;height:44px;border-radius:12px;background:var(--brand-dim);
+       border:1px solid rgba(90,107,255,.28);display:flex;align-items:center;justify-content:center;
+       margin-bottom:18px}
+  .ico svg{width:22px;height:22px;stroke:var(--brand-hi);fill:none;stroke-width:1.8;
+           stroke-linecap:round;stroke-linejoin:round}
+
+  /* ---------- work ---------- */
+  .work{display:grid;gap:26px;margin-top:44px}
+  .case{display:grid;grid-template-columns:1.05fr 1fr;gap:0;background:var(--panel);
+        border:1px solid var(--line);border-radius:22px;overflow:hidden}
+  .case.flip{grid-template-columns:1fr 1.05fr}
+  .case.flip .case-media{order:2}
+  .case-body{padding:38px}
+  .case-media{background:var(--panel2);display:flex;align-items:center;justify-content:center;
+              padding:32px;gap:18px;flex-wrap:wrap}
+  .case-media img.wide{border-radius:14px;width:100%;max-width:520px}
+  .case-media img.shot{width:236px;flex-shrink:0;border-radius:20px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+  .chip{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;
+        color:var(--muted)}
+  .chip.live{border-color:rgba(47,191,143,.4);color:var(--ok)}
+  .chip.design{border-color:rgba(224,180,92,.4);color:var(--gold)}
+  .case-body h3{font-size:25px;margin-bottom:12px}
+  .case-body p{color:var(--muted);font-size:16px}
+  ul.did{list-style:none;padding:0;margin:20px 0 0}
+  ul.did li{position:relative;padding-left:26px;margin-bottom:11px;color:var(--muted);font-size:15.5px}
+  ul.did li:before{content:"";position:absolute;left:4px;top:9px;width:8px;height:8px;
+                   border-radius:50%;background:var(--brand)}
+
+  /* ---------- steps ---------- */
+  .steps{counter-reset:s;display:grid;gap:22px;margin-top:44px;
+         grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:28px}
+  .step .n{width:36px;height:36px;border-radius:50%;background:var(--brand);color:#fff;
+           display:flex;align-items:center;justify-content:center;font-weight:700;
+           font-size:15px;margin-bottom:16px}
+  .step h3{font-size:17px;margin-bottom:8px}
+  .step p{margin:0;color:var(--muted);font-size:15px}
+
+  /* ---------- contact ---------- */
+  .contact{display:grid;grid-template-columns:1fr 1.1fr;gap:48px;margin-top:44px;align-items:start}
+  .field{margin-bottom:18px}
+  label{display:block;font-size:14px;color:var(--muted);margin-bottom:8px}
+  input,textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);
+        border-radius:12px;padding:14px 16px;color:var(--ink);font:16px var(--font);outline:none}
+  input:focus,textarea:focus,select:focus{border-color:var(--brand)}
+  textarea{min-height:132px;resize:vertical}
+  .note{font-size:13.5px;color:var(--faint);margin-top:14px}
+  .status{margin-top:16px;font-size:15px;display:none}
+  .status.show{display:block}
+  .status.ok{color:var(--ok)}
+  .status.err{color:var(--gold)}
+  .contact-list{list-style:none;padding:0;margin:26px 0 0}
+  .contact-list li{margin-bottom:18px;color:var(--muted);font-size:15.5px}
+  .contact-list b{display:block;color:#fff;font-size:14px;margin-bottom:2px}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line);padding:44px 0;color:var(--faint);font-size:14.5px}
+  .foot-in{display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+  .foot-in nav{display:flex;flex-wrap:wrap;gap:22px}
+
+  @media (max-width:980px){
+    .case,.case.flip{grid-template-columns:1fr}
+    .case.flip .case-media{order:0}
+    .contact{grid-template-columns:1fr;gap:34px}
+  }
+  @media (max-width:760px){
+    .nav-links{position:absolute;top:74px;left:0;right:0;flex-direction:column;gap:0;
+      background:var(--panel);border-bottom:1px solid var(--line);display:none;padding:8px 0}
+    .nav-links.open{display:flex}
+    .nav-links a{padding:15px 24px;width:100%}
+    .burger{display:block}
+    .section{padding:64px 0}
+    .hero{padding:64px 0 56px}
+    .btn{width:100%}
+    .btn-row{gap:12px}
+    .case-body{padding:28px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto}}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <div class="brand">
-    <img class="devlogo" src="nazbyte-dev-logo.png" alt="NazByte" width="72" height="72">
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top">
+      <img src="nazbyte-dev-logo.png" alt="NazByte" width="36" height="36">
+      <span>NazByte</span>
+    </a>
+    <button class="burger" id="burger" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="nav-links" id="navlinks">
+      <a href="#work">Work</a>
+      <a href="#services">Services</a>
+      <a href="#process">Process</a>
+      <a href="#contact">Contact</a>
+      <a class="btn btn-primary nav-cta" href="#contact">Start a project</a>
+    </nav>
   </div>
+</header>
 
-  <h1>Legal &amp; Privacy</h1>
-  <p class="meta">Privacy policies for apps published by NazByte on Google Play.</p>
+<a id="top"></a>
 
-  <a class="card" href="tasbeeh-33.html">
-    <h2>Tasbeeh 33: Dhikr Counter</h2>
-    <p>Offline tasbih &amp; dhikr counter for Android. Collects no data.</p>
-    <p>Package: <code>com.nazbyte.tasbeeh</code></p>
-    <span class="tag">Privacy policy</span>
-  </a>
+<!-- ================= HERO ================= -->
+<section class="section hero">
+  <div class="wrap">
+    <span class="eyebrow">Mobile app studio &middot; Android &amp; iOS</span>
+    <h1>Mobile apps, designed, built and published.</h1>
+    <p class="lede">
+      NazByte is a one-person studio. I take an app from the first sketch to a live store
+      listing &mdash; the design, the React Native build for Android and iOS, and the Google Play
+      and App Store work that most developers get stuck on.
+    </p>
+    <div class="btn-row">
+      <a class="btn btn-primary" href="#contact">Start a project</a>
+      <a class="btn btn-ghost" href="#work">See the work</a>
+    </div>
 
-  <footer>
-    Questions about any policy: <a href="mailto:nazbyte.support@gmail.com">nazbyte.support@gmail.com</a><br>
-    © 2026 NazByte. This page lists the policies that apply to our apps; each policy names the app it covers.
-  </footer>
+    <div class="facts">
+      <div class="fact"><b>Android + iOS</b><span>One React Native codebase, both platforms</span></div>
+      <div class="fact"><b>Design first</b><span>Every screen approved before it is built</span></div>
+      <div class="fact"><b>Published end to end</b><span>Listings, policy compliance, store releases</span></div>
+    </div>
+  </div>
+</section>
 
-</div>
+<!-- ================= WORK ================= -->
+<section class="section" id="work">
+  <div class="wrap">
+    <span class="eyebrow">Work</span>
+    <h2 style="font-size:clamp(28px,3.6vw,40px)">Apps I have taken from idea to store</h2>
+    <p class="lede">Two products of my own &mdash; because the fastest way to prove I can ship is to ship.</p>
+
+    <div class="work">
+
+      <article class="case">
+        <div class="case-body">
+          <div class="meta">
+            <span class="chip">Android</span>
+            <span class="chip live">In closed testing on Google Play</span>
+            <span class="chip">React Native</span>
+          </div>
+          <h3>Tasbeeh 33: Dhikr Counter</h3>
+          <p>
+            A dhikr counter built for people who count on their fingers and lose track. Coloured
+            beads fill as you count, progress is never lost, and the whole app works offline.
+            Morning and evening adhkar, after-salah adhkar and the daily dhikr are included.
+          </p>
+          <ul class="did">
+            <li>Full design system and ten colour themes, built around a 33-bead ring</li>
+            <li>Offline-first counting and history &mdash; no account, no data collected</li>
+            <li>One-time unlock through Google Play Billing, no subscription</li>
+            <li>Reminders with exact alarm scheduling, plus a home-screen widget</li>
+            <li>87 dhikr entries with their sources, in the app's own library</li>
+            <li>Complete store listing, data-safety and content-rating compliance, and the closed-testing programme</li>
+          </ul>
+        </div>
+        <div class="case-media">
+          <img class="wide" src="img/tasbeeh-feature.png" alt="Tasbeeh 33 store feature graphic: a beaded ring with the line Never loses count" width="1024" height="500">
+          <img class="shot" src="img/tasbeeh-counter.png" alt="Tasbeeh 33 counter screen: a 33-bead ring filling in emerald, the count 1,248, and a large glossy TAP bead" width="520" height="869">
+        </div>
+      </article>
+
+      <article class="case flip">
+        <div class="case-body">
+          <div class="meta">
+            <span class="chip">Android + iOS</span>
+            <span class="chip design">In design</span>
+            <span class="chip">React Native + Skia</span>
+          </div>
+          <h3>Elixir Sort</h3>
+          <p>
+            A glowing-liquid puzzle game: pour, sort, and get the colours to settle. Built on
+            React Native with Skia for the liquid rendering &mdash; no physics engine, so it stays
+            smooth on modest phones.
+          </p>
+          <ul class="did">
+            <li>Level progression, hints and a relaxed no-timer mode</li>
+            <li>Custom shader work for the pour and the glow</li>
+            <li>Designed to run warm-launched with the user's first launch</li>
+          </ul>
+        </div>
+        <div class="case-media">
+          <img class="shot" src="img/elixir-gameplay.png" alt="Elixir Sort gameplay screen showing glowing liquid in tubes" width="390" height="844">
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ================= SERVICES ================= -->
+<section class="section" id="services">
+  <div class="wrap">
+    <span class="eyebrow">Services</span>
+    <h2 style="font-size:clamp(28px,3.6vw,40px)">What I can build for you</h2>
+    <p class="lede">Fixed scope, agreed before any work starts. You always know what you are getting.</p>
+
+    <div class="grid g3">
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg></div>
+        <h3>React Native app development</h3>
+        <p>One codebase that ships to Android and iOS. Counters, trackers, utilities, content apps, and anything that has to work offline.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.4 8.3-8 9-4.6-.7-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h3>Google Play &amp; App Store publishing</h3>
+        <p>The part that stops most apps shipping: listings, data-safety forms, content ratings, billing setup, closed testing and the production rollout.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg></div>
+        <h3>Design to build</h3>
+        <p>Send me a design &mdash; or have me produce one &mdash; and I will implement it screen by screen until it matches on a real device.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M8 12h8M8 16h5"/></svg></div>
+        <h3>Store listing &amp; ASO</h3>
+        <p>Icon, feature graphic, screenshot sets and copy written for how people actually search the store &mdash; not just what looks nice.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></div>
+        <h3>Fixing and finishing half-built apps</h3>
+        <p>An app that never got published, crashes on newer Android, has a release-build problem or a failing store review. I get it over the line.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M2 12h20"/><path d="M12 2a15 15 0 010 20 15 15 0 010-20z"/><circle cx="12" cy="12" r="10"/></svg></div>
+        <h3>Landing pages &amp; small web tools</h3>
+        <p>Fast, static pages for an app or a brand &mdash; including browser tools like counters and calculators that need no server and cost nothing to run.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PROCESS ================= -->
+<section class="section" id="process">
+  <div class="wrap">
+    <span class="eyebrow">Process</span>
+    <h2 style="font-size:clamp(28px,3.6vw,40px)">How a project runs</h2>
+    <p class="lede">No surprises, no moving goalposts. You approve each stage before I move on.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="n">1</div>
+        <h3>Brief and fixed scope</h3>
+        <p>A short call or a written brief. You get a clear scope, a price and a date &mdash; before anything starts.</p>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <h3>Design you approve</h3>
+        <p>I mock up the screens first. Nothing gets built until you have seen what it will look like.</p>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <h3>Build in milestones</h3>
+        <p>You get a working build at each milestone, not a big reveal at the end. Feedback is built in.</p>
+      </div>
+      <div class="step">
+        <div class="n">4</div>
+        <h3>Publish and hand over</h3>
+        <p>I take it through store review and hand over the project, the assets and the release process.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<section class="section" id="contact">
+  <div class="wrap">
+    <span class="eyebrow">Contact</span>
+    <h2 style="font-size:clamp(28px,3.6vw,40px)">Start a project</h2>
+    <p class="lede">Tell me what you want to build and what stage it is at. You will get a reply within one working day.</p>
+
+    <div class="contact">
+      <div>
+        <ul class="contact-list">
+          <li><b>Email</b><a href="mailto:nazbyte.support@gmail.com">nazbyte.support@gmail.com</a></li>
+          <li><b>What helps me quote fastest</b>What the app should do, which platforms, and whether you have a design already.</li>
+          <li><b>Working hours</b>Pakistan Standard Time (UTC+5). Replies within one working day.</li>
+        </ul>
+      </div>
+
+      <form id="enquiry" novalidate>
+        <div class="field">
+          <label for="f-name">Your name</label>
+          <input id="f-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="f-email">Email</label>
+          <input id="f-email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="f-project">What do you want built?</label>
+          <textarea id="f-project" name="project" required
+            placeholder="A short paragraph is plenty. What should the app do, and is there anything existing already?"></textarea>
+        </div>
+        <div class="field">
+          <label for="f-budget">Rough budget</label>
+          <select id="f-budget" name="budget">
+            <option value="">Prefer not to say</option>
+            <option>Under $500</option>
+            <option>$500 &ndash; $1,500</option>
+            <option>$1,500 &ndash; $5,000</option>
+            <option>$5,000+</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" type="submit" id="send">Send enquiry</button>
+        <div class="status" id="status"></div>
+        <p class="note">
+          If the form does not work on your device, email
+          <a href="mailto:nazbyte.support@gmail.com">nazbyte.support@gmail.com</a> directly &mdash;
+          it reaches the same inbox.
+        </p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <div>
+      &copy; 2026 NazByte &middot;
+      <a href="mailto:nazbyte.support@gmail.com">nazbyte.support@gmail.com</a>
+    </div>
+    <nav>
+      <a href="legal.html">Legal &amp; privacy</a>
+      <a href="tasbeeh-33.html">Tasbeeh 33 privacy policy</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+  /* nav */
+  var burger = document.getElementById('burger'), links = document.getElementById('navlinks');
+  burger.addEventListener('click', function () {
+    var open = links.classList.toggle('open');
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  links.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') links.classList.remove('open');
+  });
+
+  /* enquiry form.
+     ENDPOINT is filled in once the Google Apps Script receiver is deployed.
+     While it is empty the form falls back to the visitor's own mail app, so the
+     page is never a dead end. */
+  var ENDPOINT = "";
+
+  var form = document.getElementById('enquiry'),
+      status = document.getElementById('status'),
+      send = document.getElementById('send');
+
+  function say(msg, cls) {
+    status.textContent = msg;
+    status.className = 'status show ' + cls;
+  }
+
+  function mailtoFallback(data) {
+    var body = 'Name: ' + data.name + '\nEmail: ' + data.email +
+               '\nBudget: ' + (data.budget || 'not stated') +
+               '\n\n' + data.project;
+    window.location.href = 'mailto:nazbyte.support@gmail.com'
+      + '?subject=' + encodeURIComponent('New project enquiry — ' + data.name)
+      + '&body=' + encodeURIComponent(body);
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var data = {
+      name:    form.name.value.trim(),
+      email:   form.email.value.trim(),
+      project: form.project.value.trim(),
+      budget:  form.budget.value
+    };
+    if (!data.name || !data.email || !data.project) {
+      say('Please fill in your name, email and what you want built.', 'err');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      say('That email address does not look right.', 'err');
+      return;
+    }
+    if (!ENDPOINT) {
+      say('Opening your email app…', 'ok');
+      mailtoFallback(data);
+      return;
+    }
+    send.disabled = true;
+    say('Sending…', 'ok');
+    fetch(ENDPOINT, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(data)
+    }).then(function () {
+      form.reset();
+      say('Thank you — your enquiry has been sent. I reply within one working day.', 'ok');
+    }).catch(function () {
+      say('The form could not send. Opening your email app instead…', 'err');
+      mailtoFallback(data);
+    }).then(function () {
+      send.disabled = false;
+    });
+  });
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "NazByte",
+  "url": "https://nazbyte.com/",
+  "description": "One-person mobile app studio building React Native apps for Android and iOS, including Google Play and App Store publishing.",
+  "email": "nazbyte.support@gmail.com",
+  "areaServed": "Worldwide",
+  "knowsAbout": ["React Native", "Android app development", "iOS app development", "Google Play publishing", "App Store publishing", "App store optimisation"]
+}
+</script>
+
 </body>
 </html>
