@@ -15,6 +15,9 @@ a:hover{color:#fff}
 img{max-width:100%;height:auto;display:block}
 .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 24px;min-width:0}
 .wrap,.nz-tool,.nz-row,.nz-meta,.grid,.card{min-width:0}
+/* .btn sets display:inline-flex, which beats the UA rule for [hidden] — without
+   this the "Download all" button shows before any file has been added */
+[hidden]{display:none!important}
 
 /* nav */
 header.nav{position:sticky;top:0;z-index:50;background:rgba(10,13,24,.9);
