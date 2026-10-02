@@ -97,6 +97,9 @@
   .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:28px}
   .card h3{font-size:19px;margin-bottom:10px}
   .card p{margin:0;color:var(--muted);font-size:15.5px}
+  a.card{display:block;text-decoration:none;color:inherit;transition:border-color .16s ease}
+  a.card:hover{border-color:var(--brand)}
+  a.card h3{color:#fff}
   .ico{width:44px;height:44px;border-radius:12px;background:var(--brand-dim);
        border:1px solid rgba(90,107,255,.28);display:flex;align-items:center;justify-content:center;
        margin-bottom:18px}
@@ -190,6 +193,7 @@
       <span></span><span></span><span></span>
     </button>
     <nav class="nav-links" id="navlinks">
+      <a href="tools/index.html">Free tools</a>
       <a href="#work">Work</a>
       <a href="#services">Services</a>
       <a href="#process">Process</a>
@@ -359,6 +363,37 @@
         <h3>Publish and hand over</h3>
         <p>I take it through store review and hand over the project, the assets and the release process.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TOOLS ================= -->
+<section class="section" id="tools">
+  <div class="wrap">
+    <span class="eyebrow">Free tools</span>
+    <h2 style="font-size:clamp(28px,3.6vw,40px)">Free tools that just work</h2>
+    <p class="lede">
+      No signup, no daily limit, nothing uploaded &mdash; they run entirely in your browser, so
+      they stay free and your files never leave your device.
+    </p>
+
+    <div class="grid g3">
+      <a class="card" href="tools/compress-image/index.html">
+        <h3>Compress an image to any size</h3>
+        <p>Type a target in KB and get a file that fits. JPG, PNG and WebP, in bulk.</p>
+      </a>
+      <a class="card" href="tools/compress-image-to-20kb/index.html">
+        <h3>Compress image to 20 KB</h3>
+        <p>For the tightest upload limits on application and ID forms.</p>
+      </a>
+      <a class="card" href="tools/compress-image-to-100kb/index.html">
+        <h3>Compress image to 100 KB</h3>
+        <p>Comfortable for documents, scans and everyday web images.</p>
+      </a>
+      <a class="card" href="tools/index.html">
+        <h3>All tools &rarr;</h3>
+        <p>Every size, plus whatever gets built next.</p>
+      </a>
     </div>
   </div>
 </section>
