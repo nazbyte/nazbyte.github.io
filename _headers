@@ -31,6 +31,23 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://script.google.com https://cloudflareinsights.com; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://script.google.com; object-src 'none'; upgrade-insecure-requests
 
+# ---- Ad-carrying pages: /tools/* only (APPROVED by Anila, 2026-10-03) ----
+# AdSense cannot serve under the strict /* policy above: script-src has no
+# 'unsafe-inline' (the adsbygoogle push snippet), frame-src is 'self' (ad
+# iframes) and default-src 'self' cascades to img-src/connect-src (creatives and
+# beacons). Google documents a strict nonce-based policy as the supported route,
+# but a static file on Pages cannot carry a per-response random nonce without
+# adding a Pages Function, so the approved resolution is: permissive on the ad
+# pages, strict everywhere else. Everything else is kept as tight as before.
+# NO 'strict-dynamic' here on purpose - with no nonce on the page it would make
+# the host allowlist be ignored. NO COEP anywhere - it blocks AdSense iframes.
+#
+# PHASE 1 (this commit): Report-Only, so violations show up in the console
+# without blocking anything, while the enforced /* policy stays as it was.
+# PHASE 2 (next commit): promote to the enforced header once the report is clean.
+/tools/*
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https:; frame-src 'self' https:; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://script.google.com; object-src 'none'; upgrade-insecure-requests
+
 # Admin/tester pages: keep them out of search engines at the header level too,
 # independent of the meta robots tag inside the file.
 /feedback.html

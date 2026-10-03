@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
 # tester feedback page — per-tester private links, deliberately not indexed
-Disallow: /feedback.html
+Disallow: /feedback
 
 Sitemap: https://nazbyte.com/sitemap.xml
