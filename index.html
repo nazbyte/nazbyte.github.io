@@ -6,7 +6,7 @@
 <title>NazByte — Mobile app studio | Android &amp; iOS apps, designed and published</title>
 <meta name="description" content="NazByte is a one-person mobile app studio. React Native apps for Android and iOS — design, build, and the Google Play and App Store publishing work that goes with it.">
 <link rel="canonical" href="https://nazbyte.com/">
-<meta name="theme-color" content="#0A0D18">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="nazbyte-dev-logo.png">
 
@@ -19,10 +19,10 @@
 
 <style>
   :root{
-    --bg:#0A0D18; --panel:#111629; --panel2:#0E1223; --line:#1F2742;
-    --brand:#5A6BFF; --brand-hi:#7C8AFF; --brand-dim:rgba(90,107,255,.14);
-    --ink:#EEF1FF; --muted:#98A2C8; --faint:#6C77A0;
-    --ok:#2FBF8F; --gold:#E0B45C;
+    --bg:#FFFFFF; --panel:#F6F8FD; --panel2:#EFF2FA; --line:#E2E7F2;
+    --brand:#4C5CF0; --brand-hi:#3B49D8; --brand-dim:rgba(76,92,240,.10);
+    --ink:#101427; --muted:#555F7C; --faint:#606A82;
+    --ok:#0E7C5A; --gold:#E0B45C; --gold-text:#8A6114;
     --r:16px; --maxw:1180px;
     --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
@@ -31,7 +31,7 @@
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
             font:17px/1.65 var(--font);-webkit-font-smoothing:antialiased}
   a{color:var(--brand-hi);text-decoration:none}
-  a:hover{color:#fff}
+  a:hover{color:var(--brand-hi)}
   img{max-width:100%;height:auto;display:block}
   /* grid/flex items must be allowed to shrink below their content's intrinsic
      width, otherwise the 1024px feature graphic inflates the whole page and
@@ -43,7 +43,7 @@
   .case-media img,.grid>*,.steps>*,.facts>*{min-width:0}
   /* phone frame: real device chrome around a full-bleed app screen */
   .device{width:252px;flex-shrink:0;background:#05070F;border:1px solid #2A3350;
-          border-radius:34px;padding:11px 11px 15px;box-shadow:0 20px 48px rgba(0,0,0,.55)}
+          border-radius:34px;padding:11px 11px 15px;box-shadow:0 20px 48px rgba(16,20,39,.20)}
   .device .notch{width:62px;height:6px;border-radius:999px;background:#1B2340;
                  margin:0 auto 10px}
   .device img{width:100%;border-radius:24px;display:block}
@@ -52,7 +52,7 @@
   .section{padding:88px 0;border-top:1px solid var(--line)}
   .section:first-of-type{border-top:0}
   .eyebrow{display:inline-block;font-size:13px;letter-spacing:.14em;text-transform:uppercase;
-           color:var(--brand-hi);background:var(--brand-dim);border:1px solid rgba(90,107,255,.3);
+           color:var(--brand-hi);background:var(--brand-dim);border:1px solid rgba(76,92,240,.24);
            border-radius:999px;padding:6px 14px;margin-bottom:22px}
   .lede{color:var(--muted);font-size:19px;max-width:70ch;margin:18px 0 0}
 
@@ -63,18 +63,18 @@
   .btn-primary{background:var(--brand);color:#fff}
   .btn-primary:hover{background:var(--brand-hi);color:#fff;transform:translateY(-1px)}
   .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-  .btn-ghost:hover{border-color:var(--brand);color:#fff}
+  .btn-ghost:hover{border-color:var(--brand);color:var(--brand-hi)}
   .btn-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:34px}
 
   /* ---------- nav ---------- */
-  header.nav{position:sticky;top:0;z-index:50;background:rgba(10,13,24,.88);
+  header.nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.88);
              backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
   .nav-in{display:flex;align-items:center;gap:18px;height:74px}
-  .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;color:#fff}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;color:var(--ink)}
   .brand img{width:36px;height:36px;border-radius:10px}
   .nav-links{display:flex;gap:30px;margin-left:auto;align-items:center}
   .nav-links a{color:var(--muted);font-size:15px;font-weight:500}
-  .nav-links a:hover{color:#fff}
+  .nav-links a:hover{color:var(--brand-hi)}
   .nav-cta{color:#fff!important;font-weight:600}
   .burger{display:none;margin-left:auto;background:none;border:1px solid var(--line);
           border-radius:10px;width:44px;height:44px;cursor:pointer;padding:0}
@@ -82,12 +82,12 @@
 
   /* ---------- hero ---------- */
   .hero{padding:96px 0 80px;background:
-    radial-gradient(1100px 480px at 78% -8%, rgba(90,107,255,.20), transparent 62%),
-    radial-gradient(760px 420px at 6% 12%, rgba(47,191,143,.08), transparent 60%)}
+    radial-gradient(1100px 480px at 78% -8%, rgba(76,92,240,.14), transparent 62%),
+    radial-gradient(760px 420px at 6% 12%, rgba(14,124,90,.08), transparent 60%)}
   .hero h1{font-size:clamp(36px,5.6vw,62px);max-width:20ch}
   .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px;
          margin-top:56px;padding-top:34px;border-top:1px solid var(--line)}
-  .fact b{display:block;font-size:15px;color:#fff;margin-bottom:4px}
+  .fact b{display:block;font-size:15px;color:var(--ink);margin-bottom:4px}
   .fact span{color:var(--faint);font-size:14px}
 
   /* ---------- generic grids ---------- */
@@ -99,9 +99,9 @@
   .card p{margin:0;color:var(--muted);font-size:15.5px}
   a.card{display:block;text-decoration:none;color:inherit;transition:border-color .16s ease}
   a.card:hover{border-color:var(--brand)}
-  a.card h3{color:#fff}
+  a.card h3{color:var(--ink)}
   .ico{width:44px;height:44px;border-radius:12px;background:var(--brand-dim);
-       border:1px solid rgba(90,107,255,.28);display:flex;align-items:center;justify-content:center;
+       border:1px solid rgba(76,92,240,.22);display:flex;align-items:center;justify-content:center;
        margin-bottom:18px}
   .ico svg{width:22px;height:22px;stroke:var(--brand-hi);fill:none;stroke-width:1.8;
            stroke-linecap:round;stroke-linejoin:round}
@@ -120,8 +120,8 @@
   .meta{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
   .chip{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;
         color:var(--muted)}
-  .chip.live{border-color:rgba(47,191,143,.4);color:var(--ok)}
-  .chip.design{border-color:rgba(224,180,92,.4);color:var(--gold)}
+  .chip.live{border-color:rgba(14,124,90,.35);color:var(--ok)}
+  .chip.design{border-color:rgba(168,121,27,.35);color:var(--gold-text)}
   .case-body h3{font-size:25px;margin-bottom:12px}
   .case-body p{color:var(--muted);font-size:16px}
   ul.did{list-style:none;padding:0;margin:20px 0 0}
@@ -151,10 +151,10 @@
   .status{margin-top:16px;font-size:15px;display:none}
   .status.show{display:block}
   .status.ok{color:var(--ok)}
-  .status.err{color:var(--gold)}
+  .status.err{color:var(--gold-text)}
   .contact-list{list-style:none;padding:0;margin:26px 0 0}
   .contact-list li{margin-bottom:18px;color:var(--muted);font-size:15.5px}
-  .contact-list b{display:block;color:#fff;font-size:14px;margin-bottom:2px}
+  .contact-list b{display:block;color:var(--ink);font-size:14px;margin-bottom:2px}
 
   /* ---------- footer ---------- */
   footer{border-top:1px solid var(--line);padding:44px 0;color:var(--faint);font-size:14.5px}

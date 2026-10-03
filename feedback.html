@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#FFFFFF">
 <title>Tester Feedback — Tasbeeh 33: Dhikr Counter</title>
 <meta name="description" content="Closed-test feedback form for Tasbeeh 33: Dhikr Counter by NazByte.">
 <meta name="robots" content="noindex, nofollow">
 <style>  :root{
-    --bg:#07110D; --panel:#0C1A15; --panel-2:#0E211A; --line:#17332A;
-    --emerald:#10B981; --gold:#E0B45C; --gold-ink:#1A1A12;
-    --ink:#E8F5F0; --muted:#8FB3A7; --warn:#D9713F; --bad:#C2534F;
+    --bg:#FFFFFF; --panel:#F4FAF7; --panel-2:#EAF5EF; --line:#D9E9E1;
+    --emerald:#0A7A54; --gold:#E0B45C; --gold-ink:#1A1A12; --gold-text:#8A6114;
+    --ink:#0D1F18; --muted:#4E6B60; --warn:#B4571F; --bad:#B03A36;
     --r-card:16px; --r-ctl:12px; --r-pill:999px;
     --shell:100%; --prose:74ch;
   }
@@ -21,19 +22,19 @@
   .shell{width:100%;max-width:var(--shell);margin:0 auto;padding:0 18px}
   .wrap{width:100%;max-width:var(--shell);margin:0 auto;padding:24px 18px 0}
   h1{font-size:24px;line-height:1.28;margin:14px 0 6px}
-  h2{font-size:17px;margin:30px 0 12px;color:#fff;letter-spacing:.2px}
+  h2{font-size:17px;margin:30px 0 12px;color:var(--ink);letter-spacing:.2px}
   p{margin:8px 0;color:var(--ink)}
   .muted{color:var(--muted);font-size:14px}
   header{border-bottom:1px solid var(--line);padding-bottom:20px}
   .brand{display:flex;align-items:center;gap:12px}
   .devlogo{width:60px;height:60px;display:block;border-radius:15px}
-  .tag{display:inline-block;font-size:12px;letter-spacing:.6px;color:var(--gold);
-       border:1px solid rgba(224,180,92,.35);border-radius:var(--r-pill);padding:2px 10px;margin-left:8px;
+  .tag{display:inline-block;font-size:12px;letter-spacing:.6px;color:var(--gold-text);
+       border:1px solid rgba(168,121,27,.35);border-radius:var(--r-pill);padding:2px 10px;margin-left:8px;
        vertical-align:middle}
   .prog{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
-        box-shadow:0 8px 18px rgba(0,0,0,.45)}
+        box-shadow:0 8px 18px rgba(16,20,39,.16)}
   .prog .shell{padding-top:10px;padding-bottom:10px}
-  .prog .bar{height:4px;border-radius:2px;background:#10231C;overflow:hidden}
+  .prog .bar{height:4px;border-radius:2px;background:#DFEDE6;overflow:hidden}
   .prog .bar i{display:block;height:100%;width:0%;background:var(--emerald);border-radius:2px;
                transition:width .25s ease}
   .prog .lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
@@ -48,16 +49,16 @@
         padding:10px 14px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;
         text-align:center;cursor:pointer;white-space:nowrap}
   .chip:active{transform:scale(.98)}
-  .chip[aria-pressed="true"]{border-color:var(--emerald);background:rgba(16,185,129,.14);color:#fff}
-  .chip.neg[aria-pressed="true"]{border-color:var(--warn);background:rgba(217,113,63,.14)}
-  .chip.bad[aria-pressed="true"]{border-color:var(--bad);background:rgba(194,83,79,.14)}
-  .follow{border-left:2px solid rgba(16,185,129,.4);margin:14px 0 0;padding-left:13px}
+  .chip[aria-pressed="true"]{border-color:var(--emerald);background:rgba(14,159,110,.12);color:var(--ink)}
+  .chip.neg[aria-pressed="true"]{border-color:var(--warn);background:rgba(180,87,31,.12)}
+  .chip.bad[aria-pressed="true"]{border-color:var(--bad);background:rgba(176,58,54,.12)}
+  .follow{border-left:2px solid rgba(14,159,110,.45);margin:14px 0 0;padding-left:13px}
   .follow[hidden]{display:none}
   input[type=text],input[type=email],textarea{width:100%;font:inherit;font-size:15px;color:var(--ink);
         background:var(--panel-2);border:1.5px solid var(--line);border-radius:var(--r-ctl);padding:12px 13px;
         min-height:46px}
   textarea{min-height:88px;resize:vertical}
-  input:focus,textarea:focus,button:focus-visible{outline:2px solid rgba(224,180,92,.55);outline-offset:1px}
+  input:focus,textarea:focus,button:focus-visible{outline:2px solid rgba(168,121,27,.55);outline-offset:1px}
   .rate{display:flex;gap:8px;flex-wrap:wrap}
   .rate button{flex:1 1 auto;min-width:62px}
   .grid2{display:grid;grid-template-columns:1fr;gap:10px}
@@ -67,19 +68,19 @@
   .thumb{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
   .thumb img{width:100%;height:100%;object-fit:cover;display:block}
   .thumb button{position:absolute;top:3px;right:3px;width:26px;height:26px;border-radius:50%;
-        border:1px solid rgba(255,255,255,.3);background:rgba(7,17,13,.85);color:#fff;font-size:14px;
+        border:1px solid rgba(16,32,26,.18);background:rgba(255,255,255,.92);color:var(--ink);font-size:14px;
         line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .file{display:inline-flex;align-items:center;gap:9px;border:1.5px dashed #29513F;border-radius:var(--r-ctl);
+  .file{display:inline-flex;align-items:center;gap:9px;border:1.5px dashed #B9D6C7;border-radius:var(--r-ctl);
         padding:14px 16px;color:var(--ink);background:var(--panel-2);cursor:pointer;font-size:15px}
   input[type=file]{display:none}
   .submit{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);
-        padding:12px 18px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -10px 24px rgba(0,0,0,.5)}
+        padding:12px 18px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -10px 24px rgba(16,20,39,.14)}
   .submit .in{display:flex;gap:10px;align-items:center}
   .btn{appearance:none;font:inherit;font-weight:700;font-size:16px;border-radius:var(--r-ctl);cursor:pointer;
         min-height:52px;padding:0 22px;border:1.5px solid transparent}
   .btn.primary{background:var(--gold);color:var(--gold-ink);flex:1}
   .btn.primary[disabled]{opacity:.55;cursor:default}
-  .btn.ghost{background:transparent;border-color:#2A5240;color:var(--ink);flex:0 0 auto}
+  .btn.ghost{background:transparent;border-color:#BED6CA;color:var(--ink);flex:0 0 auto}
   .status{font-size:13.5px;color:var(--muted);margin-top:8px;text-align:center;min-height:18px}
   .status.err{color:var(--bad)}
   .status.ok{color:var(--emerald)}
