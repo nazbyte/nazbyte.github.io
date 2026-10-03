@@ -42,11 +42,13 @@
 # NO 'strict-dynamic' here on purpose - with no nonce on the page it would make
 # the host allowlist be ignored. NO COEP anywhere - it blocks AdSense iframes.
 #
-# PHASE 1 (this commit): Report-Only, so violations show up in the console
-# without blocking anything, while the enforced /* policy stays as it was.
-# PHASE 2 (next commit): promote to the enforced header once the report is clean.
+# PHASE 1 was Report-Only (deployed, verified: 0 blocked requests and no
+# unexpected violations on /tools/compress-image/, -to-20kb/, -to-100kb/, and a
+# real file compress produced a blob download on each). PHASE 2: promoted to the
+# enforced header. The /* policy above is unchanged and is what the Observatory
+# still scores on the host root.
 /tools/*
-  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https:; frame-src 'self' https:; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://script.google.com; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https:; frame-src 'self' https:; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://script.google.com; object-src 'none'; upgrade-insecure-requests
 
 # Admin/tester pages: keep them out of search engines at the header level too,
 # independent of the meta robots tag inside the file.
