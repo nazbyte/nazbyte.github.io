@@ -330,91 +330,127 @@
   }
 
   /* ------------------------------------------------- smallest-file mode
-   * The other honest half of the job: "make this smaller" with no number to hit.
-   * Every pixel is kept, the encoder runs at a quality whose artefacts do not
-   * show, and the result is only offered when it is genuinely smaller than what
-   * came in. Nothing here claims to be lossless — any re-encode of a photograph
-   * is lossy — so the row reports the quality (or the colour count) that was
-   * actually used, and a crude fidelity gate decides whether to accept it.
+   * "Make this smaller" with no number to hit, pushed as far as it can go.
+   *
+   * The first version of this only tried quality 85 and then 92, which was wrong
+   * twice over (measured on real files):
+   *   - a normal 805 KB phone photo only came down to 655 KB (19%) when q60
+   *     reached 271 KB (66%) and still looked the same;
+   *   - a 35 KB WebP was reported as "nothing to gain" although q60 gave 24 KB,
+   *     and a 45 KB WhatsApp JPEG really is already as good as the browser's
+   *     encoder can make it.
+   * So now it walks a ladder from LOW quality upwards and takes the first rung
+   * that both shrinks the file and passes the fidelity gate: the smallest file
+   * that still does not show its loss. Walking up from the bottom is also the
+   * fast path - a normal photo is answered by the first rung.
    */
-  var BEST_QUALITY = 0.85;         // first try
-  var SAFE_QUALITY = 0.92;         // second try if the first moved the picture
-  var VISIBLE_DIFF = 6;            // mean per-channel difference that starts to show
-  var FLAT_BUCKETS = 4096;         // 5-bit colour buckets a flat graphic stays under
+  var QUALITY_LADDER = [0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90];
+  var PALETTE_LADDER = [256, 128, 64, 32];
+  var OK_MEAN = 5;         // average per-channel difference we accept, per tile
+  var OK_WORST = 14;       // and the worst tile may not exceed this
+  var TILE = 256;
+  var FLAT_BUCKETS = 4096; // 5-bit colour buckets a flat graphic stays under
 
-  /* Cheap, honest fidelity check: downscale both images to 64x48 and compare
-     average per-channel difference. It is not SSIM, but it catches the case that
-     matters here - a re-encode that visibly moves a whole picture - and it costs
-     one extra decode and two tiny canvases. */
-  async function meanDiff(bitmap, blob) {
-    var W = 64, H = 48;
-    var a = makeCanvas(W, H), b = makeCanvas(W, H);
-    var ca = a.getContext('2d', { willReadFrequently: true });
-    var cb = b.getContext('2d', { willReadFrequently: true });
-    ca.imageSmoothingQuality = 'high';
-    cb.imageSmoothingQuality = 'high';
-    ca.drawImage(bitmap, 0, 0, W, H);
+  /* A re-decode compared against the original on 256x256 tiles at NATIVE
+     resolution. A downscale would average JPEG blocking and PNG banding away,
+     which is exactly the damage worth catching, so the tiles are read 1:1. */
+  function tileSpots(w, h) {
+    var xs = [0, Math.max(0, (w - TILE) >> 1), Math.max(0, w - TILE)];
+    var ys = [0, Math.max(0, (h - TILE) >> 1), Math.max(0, h - TILE)];
+    var spots = [];
+    for (var i = 0; i < xs.length; i++) {
+      for (var j = 0; j < ys.length; j++) spots.push([xs[i], ys[j]]);
+    }
+    return spots;
+  }
+
+  async function fidelity(bitmap, blob) {
     var bmp;
     try {
       bmp = await createImageBitmap(blob);
     } catch (e) {
-      return 0;                                  // cannot decode: do not block on it
+      return { mean: 0, worst: 0 };          // cannot decode: do not block on it
     }
-    cb.drawImage(bmp, 0, 0, W, H);
+    var tw = Math.min(TILE, bitmap.width), th = Math.min(TILE, bitmap.height);
+    var a = makeCanvas(tw, th), b = makeCanvas(tw, th);
+    var ca = a.getContext('2d', { willReadFrequently: true });
+    var cb = b.getContext('2d', { willReadFrequently: true });
+    var spots = tileSpots(bitmap.width, bitmap.height);
+    var total = 0, worst = 0;
+    for (var i = 0; i < spots.length; i++) {
+      ca.clearRect(0, 0, tw, th);
+      cb.clearRect(0, 0, tw, th);
+      ca.drawImage(bitmap, spots[i][0], spots[i][1], tw, th, 0, 0, tw, th);
+      cb.drawImage(bmp, spots[i][0], spots[i][1], tw, th, 0, 0, tw, th);
+      var da = ca.getImageData(0, 0, tw, th).data;
+      var db = cb.getImageData(0, 0, tw, th).data;
+      var sum = 0;
+      for (var k = 0; k < da.length; k += 4) {
+        sum += Math.abs(da[k] - db[k]) + Math.abs(da[k + 1] - db[k + 1]) +
+               Math.abs(da[k + 2] - db[k + 2]);
+      }
+      var m = sum / ((da.length / 4) * 3);
+      total += m;
+      if (m > worst) worst = m;
+    }
     bmp.close && bmp.close();
-    var da = ca.getImageData(0, 0, W, H).data;
-    var db = cb.getImageData(0, 0, W, H).data;
-    var sum = 0;
-    for (var i = 0; i < da.length; i += 4) {
-      sum += Math.abs(da[i] - db[i]) + Math.abs(da[i + 1] - db[i + 1]) +
-             Math.abs(da[i + 2] - db[i + 2]);
-    }
-    return sum / ((da.length / 4) * 3);
+    return { mean: total / spots.length, worst: worst };
+  }
+
+  function passes(f) {
+    return f.mean <= OK_MEAN && f.worst <= OK_WORST;
   }
 
   async function compressBest(bitmap, fmt, file) {
+    var i, cand;
+
     if (fmt.mime === 'image/png') {
       /* A photograph stored as PNG cannot shrink without losing detail; a logo,
-         signature or screenshot can, because it uses very few colours. Only
-         attempt the palette when the picture really is that flat, and then still
-         check the result against the fidelity gate. */
+         signature or screenshot can, because it uses very few colours. */
       var src = imageDataAt(bitmap, 1);
       var data = src.data;
       var seen = new Int32Array(32768);
       var distinct = 0;
-      for (var i = 0; i < data.length; i += 4) {
+      for (i = 0; i < data.length; i += 4) {
         var key = ((data[i] >> 3) << 10) | ((data[i + 1] >> 3) << 5) | (data[i + 2] >> 3);
         if (!seen[key]) { seen[key] = 1; distinct++; if (distinct > FLAT_BUCKETS) break; }
       }
       if (distinct > FLAT_BUCKETS) return { kept: true, why: 'photo-png' };
-      var q = quantize(data, 256);
-      var blob = await encodeIndexedPng(src.canvas.width, src.canvas.height,
-                                        q.palette, q.indices);
-      if (blob.size >= file.size) return { kept: true, why: 'no-gain' };
-      var diff = await meanDiff(bitmap, blob);
-      if (diff > VISIBLE_DIFF) return { kept: true, why: 'detail' };
-      return { blob: blob, width: src.canvas.width, height: src.canvas.height,
-               colors: q.palette.length / 4, diff: diff, scale: 1, format: 'png',
+
+      var best = null, shrank = false;
+      for (var pi = 0; pi < PALETTE_LADDER.length; pi++) {
+        var q = quantize(data, PALETTE_LADDER[pi]);
+        var blob = await encodeIndexedPng(src.canvas.width, src.canvas.height,
+                                          q.palette, q.indices);
+        if (blob.size >= file.size) continue;          // nothing to gain at this palette
+        shrank = true;
+        var f = await fidelity(bitmap, blob);
+        if (!passes(f)) break;                         // going further would start to show
+        best = { blob: blob, colors: q.palette.length / 4, diff: f.mean, worst: f.worst };
+      }
+      if (!best) return { kept: true, why: shrank ? 'detail' : 'no-gain' };
+      return { blob: best.blob, width: src.canvas.width, height: src.canvas.height,
+               colors: best.colors, diff: best.diff, scale: 1, format: 'png',
                kept: false, fits: true, single: true };
     }
 
     var canvas = drawScaled(bitmap, 1);
-    var qualities = [BEST_QUALITY, SAFE_QUALITY];
-    for (var qi = 0; qi < qualities.length; qi++) {
-      var out = await toBlob(canvas, fmt.mime, qualities[qi]);
-      if (!out) continue;
-      if (out.size >= file.size) {
-        if (qi === qualities.length - 1) return { kept: true, why: 'no-gain' };
-        continue;
-      }
-      var d = await meanDiff(bitmap, out);
-      if (d <= VISIBLE_DIFF) {
-        return { blob: out, width: canvas.width, height: canvas.height,
-                 quality: qualities[qi], diff: d, scale: 1, format: fmt.ext,
-                 kept: false, fits: true, single: true };
+    var smallest = null;
+    for (i = 0; i < QUALITY_LADDER.length; i++) {
+      cand = await toBlob(canvas, fmt.mime, QUALITY_LADDER[i]);
+      if (!cand || cand.size >= file.size) continue;   // not a saving, try a higher rung
+      smallest = { blob: cand, quality: QUALITY_LADDER[i] };
+      var fid = await fidelity(bitmap, cand);
+      if (passes(fid)) {
+        return { blob: cand, width: canvas.width, height: canvas.height,
+                 quality: QUALITY_LADDER[i], diff: fid.mean, worst: fid.worst,
+                 scale: 1, format: fmt.ext, kept: false, fits: true, single: true };
       }
     }
-    return { kept: true, why: 'detail' };
+    /* something was smaller, but every one of them showed damage (or the only
+       savings were below the ladder): hand back the original rather than a file
+       that looks worse, and say which of the two it was */
+    return { kept: true, why: smallest ? 'detail' : 'no-gain' };
   }
 
   async function searchQualityOn(canvas, mime, targetBytes, floorQuality) {
@@ -666,7 +702,12 @@
         return 'a photograph stored as PNG cannot shrink without losing detail — JPG or WebP ' +
                'would be far smaller';
       }
-      return 're-encoding would not make it smaller';
+      if (why === 'detail') {
+        return 'every smaller version showed visible loss, so it is left as it is — use Exact ' +
+               'size if it has to be smaller';
+      }
+      return 'already efficiently compressed — no smaller version looks the same — use Exact ' +
+             'size if it has to be smaller';
     }
 
     function recount(target) {
@@ -675,15 +716,20 @@
       var total = results.reduce(function (n, r) { return n + r.out.blob.size; }, 0);
       var before = results.reduce(function (n, r) { return n + r.file.size; }, 0);
       var shrunk = results.filter(function (r) { return !r.out.kept; }).length;
-      summary.textContent = mode === 'small'
-        ? (shrunk === results.length
-             ? results.length + ' compressed'
-             : shrunk + ' of ' + results.length + ' compressed') +
-          '  ·  ' + bytes(before) + ' → ' + bytes(total) +
-          (shrunk === 0 ? '  ·  nothing to gain' : '')
-        : ok + ' of ' + results.length + ' under ' +
+      if (mode === 'small') {
+        /* "0 of 1 compressed" read like the tool had failed; it is a result too,
+           so say what it means instead */
+        summary.textContent = shrunk === 0
+          ? 'Already as small as it goes  ·  ' + bytes(before) +
+            '  ·  nothing smaller looks the same'
+          : (shrunk === results.length ? results.length + ' compressed'
+                                       : shrunk + ' of ' + results.length + ' compressed') +
+            '  ·  ' + bytes(before) + ' → ' + bytes(total);
+      } else {
+        summary.textContent = ok + ' of ' + results.length + ' under ' +
           (target / 1024).toFixed(target % 1024 === 0 ? 0 : 1) + ' KB  ·  ' +
           bytes(before) + ' → ' + bytes(total);
+      }
       downloadAll.hidden = false;
     }
 
