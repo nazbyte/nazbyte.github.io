@@ -47,7 +47,14 @@
 # real file compress produced a blob download on each). PHASE 2: promoted to the
 # enforced header. The /* policy above is unchanged and is what the Observatory
 # still scores on the host root.
+#
+# `! Content-Security-Policy` is REQUIRED, not cosmetic: an incoming request that
+# matches several rules inherits ALL of them, so without the detach line the
+# /tools/* response carries TWO enforced CSP headers. Browsers then apply the
+# intersection of the two, i.e. the strict policy wins and AdSense stays blocked
+# (measured live: 2 x content-security-policy on this path before the detach).
 /tools/*
+  ! Content-Security-Policy
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https:; frame-src 'self' https:; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://script.google.com; object-src 'none'; upgrade-insecure-requests
 
 # Admin/tester pages: keep them out of search engines at the header level too,
