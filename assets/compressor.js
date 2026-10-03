@@ -341,8 +341,27 @@
     return best || { blob: await toBlob(canvas, mime, floorQuality), quality: floorQuality, canvas: canvas, fits: false };
   }
 
-  /* ------------------------------------------------------------------ UI */
-
+  /* ------------------------------------------------------------------ UI
+   *
+   * The flow is deliberately TWO steps: add, then compress.
+   *
+   * Dropping a file used to start compressing immediately, using whatever
+   * number happened to be in the target field - so a visitor who added their
+   * image first (the natural thing to do) got it squeezed to the default 100 KB
+   * before they had chosen anything, with no way to tell what had just
+   * happened. Now added files queue up as "Ready", the primary button spells
+   * out what it will do ("Compress 2 images to 100 KB"), and no encoding
+   * happens until it is pressed.
+   *
+   * AFTER the first run, changing the target or a size chip re-runs the batch on
+   * the spot - that is the tool's promise ("switching is instant") and it is an
+   * obvious cause and effect. Only the first run is gated.
+   *
+   * Every run reports progress, because a 6 MB PNG can take seconds: an
+   * indeterminate bar on the card, a spinner plus "Compressing 2 of 5" in the
+   * footer, and a per-row state (Ready -> Compressing -> result). Nothing here
+   * can look like a hang.
+   */
   function init(root) {
     var targetInput = root.querySelector('[data-nz-target]');
     var formatSel   = root.querySelector('[data-nz-format]');
@@ -350,14 +369,27 @@
     var drop        = root.querySelector('[data-nz-drop]');
     var list        = root.querySelector('[data-nz-list]');
     var summary     = root.querySelector('[data-nz-summary]');
+    var runBtn      = root.querySelector('[data-nz-run]');
     var downloadAll = root.querySelector('[data-nz-download-all]');
+    var progress    = root.querySelector('[data-nz-progress]');
+    var spin        = root.querySelector('[data-nz-spin]');
     var chips       = root.querySelectorAll('[data-nz-preset]');
-    var results     = [];
+
+    var batch = [];        // [{file, el}] the files added since the last drop
+    var results = [];
+    var busy = false;
+    var hasRun = false;    // has this batch been compressed at least once?
 
     function targetBytes() {
       var kb = parseFloat(targetInput.value);
       if (!isFinite(kb) || kb <= 0) return null;
       return Math.round(kb * 1024);
+    }
+
+    function targetLabel() {
+      var t = targetBytes();
+      if (!t) return '';
+      return (t % 1024 === 0 ? (t / 1024) : (t / 1024).toFixed(1)) + ' KB';
     }
 
     function setTarget(kb) {
@@ -367,16 +399,50 @@
       });
     }
 
-    chips.forEach(function (c) {
-      c.addEventListener('click', function () { setTarget(c.dataset.nzPreset); run(); });
-    });
+    /* The footer carries exactly one primary action at a time: Compress while
+       files are waiting, Download all once there are results. */
+    function syncFooter() {
+      if (busy) return;
+      var n = batch.length;
+      if (!n) {
+        runBtn.hidden = true;
+        downloadAll.hidden = true;
+        summary.textContent = 'Choose an image to begin.';
+        return;
+      }
+      if (!hasRun) {
+        var total = batch.reduce(function (sum, p) { return sum + p.file.size; }, 0);
+        runBtn.hidden = false;
+        runBtn.disabled = !targetBytes();
+        runBtn.textContent = 'Compress ' +
+          (n > 1 ? n + ' images' : 'the image') +
+          (targetBytes() ? ' to ' + targetLabel() : '');
+        downloadAll.hidden = true;
+        summary.textContent = n === 1
+          ? 'Ready — ' + bytes(batch[0].file.size)
+          : n + ' images ready — ' + bytes(total);
+        return;
+      }
+      runBtn.hidden = true;
+      downloadAll.hidden = !results.length;
+    }
 
-    targetInput.addEventListener('change', run);
-    formatSel.addEventListener('change', run);
+    function setBusy(on, text) {
+      busy = on;
+      root.classList.toggle('nz-busy', on);
+      root.setAttribute('aria-busy', on ? 'true' : 'false');
+      if (progress) progress.classList.toggle('on', on);
+      if (spin) spin.hidden = !on;
+      runBtn.disabled = on;
+      if (on) {
+        runBtn.hidden = true;
+        if (text) summary.textContent = text;
+      }
+    }
 
     function row(file) {
       var el = document.createElement('div');
-      el.className = 'nz-row';
+      el.className = 'nz-row nz-row-pending';
       el.innerHTML =
         '<div class="nz-thumb"></div>' +
         '<div class="nz-meta">' +
@@ -386,6 +452,11 @@
         '<div class="nz-act"></div>';
       el.querySelector('.nz-name').textContent = file.name;
       el.querySelector('.nz-name').setAttribute('title', file.name);
+      /* the extension stands in for a thumbnail until the file is decoded, so a
+         queued row never looks like a broken image box */
+      el.querySelector('.nz-thumb').dataset.ext =
+        (file.name.split('.').pop() || 'IMG').slice(0, 4).toUpperCase();
+      status(el, 'Ready — ' + bytes(file.size), '');
       list.appendChild(el);
       return el;
     }
@@ -396,10 +467,14 @@
       sizes.className = 'nz-sizes' + (cls ? ' ' + cls : '');
     }
 
-    async function handle(file, el) {
-      var target = targetBytes();
-      if (!target) { status(el, 'Enter a target size first.', 'warn'); return; }
-      status(el, 'Working…');
+    function setState(el, state, text, cls) {
+      el.classList.remove('nz-row-pending', 'nz-row-working');
+      if (state) el.classList.add('nz-row-' + state);
+      status(el, text, cls);
+    }
+
+    async function handle(file, el, target) {
+      setState(el, 'working', 'Compressing…');
 
       var fmt = formatSel.value;
       var ext = (file.name.split('.').pop() || '').toLowerCase();
@@ -409,7 +484,7 @@
       try {
         bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
       } catch (e) {
-        status(el, 'This browser cannot read that file type. Try JPG, PNG or WebP.', 'bad');
+        setState(el, null, 'This browser cannot read that file type. Try JPG, PNG or WebP.', 'bad');
         return;
       }
 
@@ -419,6 +494,7 @@
       var s = Math.max(72 / bitmap.width, 72 / bitmap.height);
       tctx.drawImage(bitmap, (72 - bitmap.width * s) / 2, (72 - bitmap.height * s) / 2,
                      bitmap.width * s, bitmap.height * s);
+      thumb.innerHTML = '';
       thumb.appendChild(tc);
 
       var out = await compress(bitmap, {
@@ -430,12 +506,13 @@
       });
       bitmap.close && bitmap.close();
 
-      if (!out || !out.blob) { status(el, 'Could not compress this file.', 'bad'); return; }
+      if (!out || !out.blob) { setState(el, null, 'Could not compress this file.', 'bad'); return; }
 
       var url = URL.createObjectURL(out.blob);
       var name = file.name.replace(/\.[^.]+$/, '') + '.' + out.format;
       var pct = Math.round((1 - out.blob.size / file.size) * 100);
 
+      el.classList.remove('nz-row-pending', 'nz-row-working');
       el.querySelector('.nz-sizes').textContent =
         bytes(file.size) + '  →  ' + bytes(out.blob.size) + '  (' +
         (pct >= 0 ? pct + '% smaller' : Math.abs(pct) + '% larger') + ')' +
@@ -452,7 +529,6 @@
       el.querySelector('.nz-act').appendChild(a);
 
       results.push({ file: file, out: out, url: url, name: name });
-      recount(target);
     }
 
     function recount(target) {
@@ -466,32 +542,74 @@
       downloadAll.hidden = false;
     }
 
-    var queue = Promise.resolve();
-    function run() {
+    /* Only ever called from an explicit action: the Compress button, or a target
+       change AFTER the first run. */
+    var chain = Promise.resolve();
+    function run(reason) {
+      if (busy) return;
       var target = targetBytes();
-      if (!target) { summary.textContent = 'Enter a target size.'; return; }
-      var files = Array.prototype.slice.call(input.files || []);
-      if (!files.length) { summary.textContent = 'Choose an image to begin.'; return; }
-      list.innerHTML = '';
+      if (!target) { summary.textContent = 'Type a target size in KB first.'; return; }
+      if (!batch.length) return;
+
+      var items = batch;
+      var total = items.length;
+      var started = 0;
+      hasRun = true;
       results = [];
-      input.files = null;
-      files.forEach(function (f) {
-        var el = row(f);
-        queue = queue.then(function () { return handle(f, el); });
+      list.innerHTML = '';
+      downloadAll.hidden = true;
+      items.forEach(function (it) { it.el = row(it.file); });
+      setBusy(true, 'Compressing 1 of ' + total + '…');
+
+      items.forEach(function (it) {
+        chain = chain.then(function () {
+          if (started > 0) summary.textContent = 'Compressing ' + (started + 1) + ' of ' + total + '…';
+          started++;
+          return handle(it.file, it.el, target);
+        });
       });
+      chain = chain.then(function () {
+        setBusy(false);
+        recount(target);   // the batch stays, so a new target can re-run it
+      });
+      return chain;
     }
 
     function addFiles(fileList) {
-      var dt = new DataTransfer();
-      Array.prototype.forEach.call(input.files || [], function (f) { dt.items.add(f); });
-      Array.prototype.forEach.call(fileList, function (f) {
-        if (/^image\//.test(f.type) || /\.(jpe?g|png|webp|heic|heif)$/i.test(f.name)) dt.items.add(f);
+      var files = Array.prototype.slice.call(fileList).filter(function (f) {
+        return /^image\//.test(f.type) || /\.(jpe?g|png|webp|heic|heif)$/i.test(f.name);
       });
-      input.files = dt.files;
-      run();
+      if (!files.length) {
+        summary.textContent = 'Those are not images — use JPG, PNG or WebP.';
+        return;
+      }
+      /* a new drop replaces the previous batch, so the card never shows two
+         different targets' results side by side */
+      list.innerHTML = '';
+      batch = [];
+      results = [];
+      hasRun = false;
+      files.forEach(function (f) {
+        var el = row(f);
+        batch.push({ file: f, el: el });
+      });
+      syncFooter();
     }
 
-    input.addEventListener('change', run);
+    chips.forEach(function (c) {
+      c.addEventListener('click', function () {
+        setTarget(c.dataset.nzPreset);
+        if (hasRun) { run('chip'); } else { syncFooter(); }
+      });
+    });
+    targetInput.addEventListener('change', function () {
+      if (hasRun) { run('target'); } else { syncFooter(); }
+    });
+    formatSel.addEventListener('change', function () { if (hasRun) run('format'); });
+    runBtn.addEventListener('click', function () { run('button'); });
+
+    input.addEventListener('change', function () { addFiles(input.files); input.value = ''; });
+
     ['dragenter', 'dragover'].forEach(function (ev) {
       drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('over'); });
     });
@@ -518,6 +636,7 @@
     });
 
     if (targetInput.value) setTarget(targetInput.value);
+    syncFooter();
     root.classList.add('nz-ready');
   }
 
@@ -526,3 +645,4 @@
     document.querySelectorAll('[data-nz-compressor]').forEach(init);
   });
 })();
+
