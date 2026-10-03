@@ -1,0 +1,29 @@
+# Security headers for nazbyte.com (Cloudflare Pages reads this file at deploy time)
+# Docs: https://developers.cloudflare.com/pages/configuration/headers/
+#
+# VERIFIED against the actual pages in this repo on 2026-10-03:
+#   - every page has inline <script> and inline <style> blocks  -> 'unsafe-inline' is required
+#   - inline style="" attributes are present                    -> 'unsafe-inline' for style-src
+#   - the ONLY external network destination is script.google.com (the tester feedback form
+#     POSTs to the Apps Script endpoint with fetch())
+#   - blob: is used by the image compressor for previews/downloads
+#   - no external fonts, no CDNs, no analytics, no third-party scripts
+#
+# NOTE ON HSTS: it is deliberately NOT set here. It is set once at the zone level
+# (SSL/TLS -> Edge Certificates -> HTTP Strict Transport Security) so that it also covers
+# any future subdomain and is not duplicated.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://script.google.com; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://script.google.com; object-src 'none'; upgrade-insecure-requests
+
+# Admin/tester pages: keep them out of search engines at the header level too,
+# independent of the meta robots tag inside the file.
+/feedback.html
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/feedback
+  X-Robots-Tag: noindex, nofollow, noarchive
