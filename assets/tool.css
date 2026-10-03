@@ -174,7 +174,8 @@ footer{border-top:1px solid var(--line);padding:38px 0;color:var(--faint);font-s
 
 /* ---------- run state: progress must always be visible while work happens
    (a 6 MB PNG can take seconds — a silent card reads as a hang) ---------- */
-.nz-progress{height:3px;position:relative;overflow:hidden}
+.nz-progress{height:4px;position:relative;overflow:hidden}
+.nz-progress.on{background:var(--line)}
 .nz-progress span{position:absolute;top:0;bottom:0;left:0;width:34%;border-radius:2px;
       background:var(--brand);opacity:0}
 .nz-progress.on span{opacity:1;animation:nz-slide 1.15s ease-in-out infinite}
