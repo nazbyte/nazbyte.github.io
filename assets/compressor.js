@@ -50,7 +50,9 @@
   async function searchQuality(bitmap, mime, targetBytes, floorQuality) {
     var base = drawScaled(bitmap, 1);
     var best = null;
-    var lo = floorQuality, hi = 0.96;
+    /* 0.98, not 0.96: with a generous target the visitor asked to *keep* quality,
+       and the ceiling is what decides how much of the budget gets spent. */
+    var lo = floorQuality, hi = 0.98;
     var smallest = await toBlob(base, mime, floorQuality);
     if (!smallest || smallest.size > targetBytes) {
       return { blob: smallest, quality: floorQuality, canvas: base, fits: false };
@@ -301,9 +303,31 @@
                quality: null, scale: 1, format: opts.originalExt || 'original', kept: true, fits: true };
     }
 
-    var result;
+    var result, writtenAs = fmt.ext, switchedFrom = null, pngDegraded = false;
     if (fmt.mime === 'image/png') {
       result = await shrinkPng(bitmap, target);
+      if (result && result.fits && result.colors) {
+        var pf = await fidelity(bitmap, result.blob);
+        if (!passes(pf)) {
+          /* Measured on a 10 MB photo-PNG with a 10 MB target: the palette result
+             was 1.57 MB at 256 colours with a mean tile difference of 7.5 — over
+             half the budget left unspent and clearly banded. The budget was never
+             the problem; the format is. */
+          if (opts.keepFormat) {
+            var alt = await searchQuality(bitmap, FORMATS.jpeg.mime, target, 0.05);
+            var af = (alt && alt.fits) ? await fidelity(bitmap, alt.blob) : null;
+            if (alt && alt.fits && af && passes(af)) {
+              result = alt;
+              writtenAs = FORMATS.jpeg.ext;
+              switchedFrom = 'png';
+            } else {
+              pngDegraded = true;
+            }
+          } else {
+            pngDegraded = true;      // PNG was chosen explicitly: keep it, but say so
+          }
+        }
+      }
     } else {
       result = await searchQuality(bitmap, fmt.mime, target, 0.05);
       if (!result.fits) {                       // quality alone wasn't enough
@@ -323,7 +347,12 @@
       quality: result.quality,
       colors: result.colors || null,
       scale: result.scale || 1,
-      format: fmt.ext,
+      format: writtenAs,
+      switchedFrom: switchedFrom,
+      pngDegraded: pngDegraded,
+      /* the encoder has no setting above ~0.98, so a result that is both at the
+         ceiling and well under the target is as good as this browser can do */
+      hitCeiling: !!(result.quality && result.quality >= 0.97 && writtenAs !== 'png'),
       kept: false,
       fits: !!result.fits
     };
@@ -454,7 +483,7 @@
   }
 
   async function searchQualityOn(canvas, mime, targetBytes, floorQuality) {
-    var lo = floorQuality, hi = 0.96, best = null;
+    var lo = floorQuality, hi = 0.98, best = null;
     for (var i = 0; i < 8; i++) {
       var mid = (lo + hi) / 2;
       var b = await toBlob(canvas, mime, mid);
@@ -702,6 +731,7 @@
         out = await compress(bitmap, {
           targetBytes: target,
           format: fmt === 'keep' ? outFmt : fmt,
+          keepFormat: fmt === 'keep',
           originalSize: file.size,
           originalBlob: file,
           originalExt: ext
@@ -733,9 +763,24 @@
           facts.push('quality ' + Math.round(out.quality * 100));
         }
         if (out.colors) facts.push(out.colors + ' colours');
+        /* say why a result came back much smaller than the number that was asked
+           for, instead of leaving the visitor to wonder what happened */
+        if (out.switchedFrom === 'png') {
+          facts.push('written as JPG — a photo in PNG cannot fit ' + targetLabelOf(target) +
+                     ' without cutting colour');
+        }
+        if (out.pngDegraded) {
+          facts.push('PNG fit only by cutting colour to ' + (out.colors || 'few') +
+                     ' — JPG or WebP would look much better');
+        }
+        if (out.hitCeiling && target && out.blob.size < target * 0.8) {
+          facts.push('best quality this encoder offers — well under your ' +
+                     targetLabelOf(target) + ' target');
+        }
       }
       el.querySelector('.nz-sizes').textContent = facts.join('  ·  ');
-      el.querySelector('.nz-sizes').className = 'nz-sizes ' + (out.fits ? 'good' : 'warn');
+      el.querySelector('.nz-sizes').className =
+        'nz-sizes ' + (out.fits && !out.pngDegraded ? 'good' : 'warn');
 
       var a = document.createElement('a');
       a.className = 'nz-dl';
@@ -746,6 +791,16 @@
       el.querySelector('.nz-act').appendChild(a);
 
       results.push({ file: file, out: out, url: url, name: name });
+    }
+
+    /* a byte target, written the way the visitor typed it */
+    function targetLabelOf(n) {
+      if (!n) return 'this target';
+      if (n >= 1048576) {
+        var mb = n / 1048576;
+        return (mb === Math.round(mb) ? mb : mb.toFixed(1)) + ' MB';
+      }
+      return Math.round(n / 1024) + ' KB';
     }
 
     function keptReason(why) {
