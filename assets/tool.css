@@ -172,6 +172,27 @@ footer{border-top:1px solid var(--line);padding:38px 0;color:var(--faint);font-s
 .promise b{color:var(--muted);font-weight:600}
 .cta h2{margin:0 0 6px}
 
+/* ---- how to compress: two modes, chosen before anything runs ----
+   "Smallest file" answers *make this smaller*; "Exact size" answers *make this
+   fit 100 KB*. They are different questions, so the card asks first. Exact size
+   is the default on every page, so each page still matches its own headline. */
+.nz-modeswrap{grid-column:1/-1}
+.nz-modehead{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+      color:var(--faint);margin-bottom:9px}
+.nz-modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nz-mode{text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;
+      padding:12px 14px;cursor:pointer;font-family:var(--font);transition:.14s}
+.nz-mode:hover{border-color:var(--brand)}
+.nz-mode b{display:block;font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.nz-mode span{display:block;font-size:12.5px;color:var(--faint);line-height:1.35}
+.nz-mode.on{border-color:var(--brand);background:var(--brand-dim);
+      box-shadow:inset 0 0 0 1px var(--brand)}
+.nz-mode.on b{color:var(--brand-hi)}
+.nz-kept{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13.5px;color:var(--muted);margin:0}
+.nz-panel-small small{margin-top:6px}
+.nz-tool.nz-busy .nz-mode{opacity:.6;pointer-events:none}
+@media (max-width:560px){.nz-modes{grid-template-columns:1fr}}
+
 /* ---------- run state: progress must always be visible while work happens
    (a 6 MB PNG can take seconds — a silent card reads as a hang) ---------- */
 .nz-progress{height:4px;position:relative;overflow:hidden}

@@ -329,6 +329,94 @@
     };
   }
 
+  /* ------------------------------------------------- smallest-file mode
+   * The other honest half of the job: "make this smaller" with no number to hit.
+   * Every pixel is kept, the encoder runs at a quality whose artefacts do not
+   * show, and the result is only offered when it is genuinely smaller than what
+   * came in. Nothing here claims to be lossless — any re-encode of a photograph
+   * is lossy — so the row reports the quality (or the colour count) that was
+   * actually used, and a crude fidelity gate decides whether to accept it.
+   */
+  var BEST_QUALITY = 0.85;         // first try
+  var SAFE_QUALITY = 0.92;         // second try if the first moved the picture
+  var VISIBLE_DIFF = 6;            // mean per-channel difference that starts to show
+  var FLAT_BUCKETS = 4096;         // 5-bit colour buckets a flat graphic stays under
+
+  /* Cheap, honest fidelity check: downscale both images to 64x48 and compare
+     average per-channel difference. It is not SSIM, but it catches the case that
+     matters here - a re-encode that visibly moves a whole picture - and it costs
+     one extra decode and two tiny canvases. */
+  async function meanDiff(bitmap, blob) {
+    var W = 64, H = 48;
+    var a = makeCanvas(W, H), b = makeCanvas(W, H);
+    var ca = a.getContext('2d', { willReadFrequently: true });
+    var cb = b.getContext('2d', { willReadFrequently: true });
+    ca.imageSmoothingQuality = 'high';
+    cb.imageSmoothingQuality = 'high';
+    ca.drawImage(bitmap, 0, 0, W, H);
+    var bmp;
+    try {
+      bmp = await createImageBitmap(blob);
+    } catch (e) {
+      return 0;                                  // cannot decode: do not block on it
+    }
+    cb.drawImage(bmp, 0, 0, W, H);
+    bmp.close && bmp.close();
+    var da = ca.getImageData(0, 0, W, H).data;
+    var db = cb.getImageData(0, 0, W, H).data;
+    var sum = 0;
+    for (var i = 0; i < da.length; i += 4) {
+      sum += Math.abs(da[i] - db[i]) + Math.abs(da[i + 1] - db[i + 1]) +
+             Math.abs(da[i + 2] - db[i + 2]);
+    }
+    return sum / ((da.length / 4) * 3);
+  }
+
+  async function compressBest(bitmap, fmt, file) {
+    if (fmt.mime === 'image/png') {
+      /* A photograph stored as PNG cannot shrink without losing detail; a logo,
+         signature or screenshot can, because it uses very few colours. Only
+         attempt the palette when the picture really is that flat, and then still
+         check the result against the fidelity gate. */
+      var src = imageDataAt(bitmap, 1);
+      var data = src.data;
+      var seen = new Int32Array(32768);
+      var distinct = 0;
+      for (var i = 0; i < data.length; i += 4) {
+        var key = ((data[i] >> 3) << 10) | ((data[i + 1] >> 3) << 5) | (data[i + 2] >> 3);
+        if (!seen[key]) { seen[key] = 1; distinct++; if (distinct > FLAT_BUCKETS) break; }
+      }
+      if (distinct > FLAT_BUCKETS) return { kept: true, why: 'photo-png' };
+      var q = quantize(data, 256);
+      var blob = await encodeIndexedPng(src.canvas.width, src.canvas.height,
+                                        q.palette, q.indices);
+      if (blob.size >= file.size) return { kept: true, why: 'no-gain' };
+      var diff = await meanDiff(bitmap, blob);
+      if (diff > VISIBLE_DIFF) return { kept: true, why: 'detail' };
+      return { blob: blob, width: src.canvas.width, height: src.canvas.height,
+               colors: q.palette.length / 4, diff: diff, scale: 1, format: 'png',
+               kept: false, fits: true, single: true };
+    }
+
+    var canvas = drawScaled(bitmap, 1);
+    var qualities = [BEST_QUALITY, SAFE_QUALITY];
+    for (var qi = 0; qi < qualities.length; qi++) {
+      var out = await toBlob(canvas, fmt.mime, qualities[qi]);
+      if (!out) continue;
+      if (out.size >= file.size) {
+        if (qi === qualities.length - 1) return { kept: true, why: 'no-gain' };
+        continue;
+      }
+      var d = await meanDiff(bitmap, out);
+      if (d <= VISIBLE_DIFF) {
+        return { blob: out, width: canvas.width, height: canvas.height,
+                 quality: qualities[qi], diff: d, scale: 1, format: fmt.ext,
+                 kept: false, fits: true, single: true };
+      }
+    }
+    return { kept: true, why: 'detail' };
+  }
+
   async function searchQualityOn(canvas, mime, targetBytes, floorQuality) {
     var lo = floorQuality, hi = 0.96, best = null;
     for (var i = 0; i < 8; i++) {
@@ -374,11 +462,27 @@
     var progress    = root.querySelector('[data-nz-progress]');
     var spin        = root.querySelector('[data-nz-spin]');
     var chips       = root.querySelectorAll('[data-nz-preset]');
+    var sizePanel   = root.querySelector('[data-nz-panel="size"]');
+    var smallPanel  = root.querySelector('[data-nz-panel="small"]');
+    var modeBtns    = root.querySelectorAll('[data-nz-mode]');
 
+    var mode = 'size';     // 'size' = fit a number, 'small' = as small as it goes
     var batch = [];        // [{file, el}] the files added since the last drop
     var results = [];
     var busy = false;
     var hasRun = false;    // has this batch been compressed at least once?
+
+    function setMode(m) {
+      mode = m;
+      modeBtns.forEach(function (b) {
+        var on = b.dataset.nzMode === m;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-checked', on ? 'true' : 'false');
+      });
+      if (sizePanel) sizePanel.hidden = (m !== 'size');
+      if (smallPanel) smallPanel.hidden = (m !== 'small');
+      syncFooter();
+    }
 
     function targetBytes() {
       var kb = parseFloat(targetInput.value);
@@ -412,11 +516,13 @@
       }
       if (!hasRun) {
         var total = batch.reduce(function (sum, p) { return sum + p.file.size; }, 0);
+        var small = mode === 'small';
         runBtn.hidden = false;
-        runBtn.disabled = !targetBytes();
-        runBtn.textContent = 'Compress ' +
-          (n > 1 ? n + ' images' : 'the image') +
-          (targetBytes() ? ' to ' + targetLabel() : '');
+        runBtn.disabled = !small && !targetBytes();
+        runBtn.textContent = small
+          ? 'Compress ' + (n > 1 ? n + ' images' : 'the image') + ' (smallest)'
+          : 'Compress ' + (n > 1 ? n + ' images' : 'the image') +
+            (targetBytes() ? ' to ' + targetLabel() : '');
         downloadAll.hidden = true;
         summary.textContent = n === 1
           ? 'Ready — ' + bytes(batch[0].file.size)
@@ -497,27 +603,51 @@
       thumb.innerHTML = '';
       thumb.appendChild(tc);
 
-      var out = await compress(bitmap, {
-        targetBytes: target,
-        format: fmt === 'keep' ? outFmt : fmt,
-        originalSize: file.size,
-        originalBlob: file,
-        originalExt: ext
-      });
+      var out;
+      if (mode === 'small') {
+        out = await compressBest(bitmap, FORMATS[outFmt], file);
+        if (out && out.kept) {
+          out = { blob: file, format: ext === 'jpeg' ? 'jpg' : (ext || 'jpg'),
+                  width: bitmap.width, height: bitmap.height, kept: true, fits: true,
+                  scale: 1, why: out.why };
+        }
+      } else {
+        out = await compress(bitmap, {
+          targetBytes: target,
+          format: fmt === 'keep' ? outFmt : fmt,
+          originalSize: file.size,
+          originalBlob: file,
+          originalExt: ext
+        });
+      }
       bitmap.close && bitmap.close();
 
       if (!out || !out.blob) { setState(el, null, 'Could not compress this file.', 'bad'); return; }
 
       var url = URL.createObjectURL(out.blob);
-      var name = file.name.replace(/\.[^.]+$/, '') + '.' + out.format;
+      var name = out.kept ? file.name
+                          : file.name.replace(/\.[^.]+$/, '') + '.' + out.format;
       var pct = Math.round((1 - out.blob.size / file.size) * 100);
 
       el.classList.remove('nz-row-pending', 'nz-row-working');
-      el.querySelector('.nz-sizes').textContent =
-        bytes(file.size) + '  →  ' + bytes(out.blob.size) + '  (' +
-        (pct >= 0 ? pct + '% smaller' : Math.abs(pct) + '% larger') + ')' +
-        (out.scale < 1 ? '  ·  resized ' + Math.round(out.scale * 100) + '%' : '') +
-        (out.width ? '  ·  ' + out.width + '×' + out.height : '');
+      var resized = out.scale && out.scale < 1;
+      var facts = [];
+      if (out.kept) {
+        facts.push(bytes(file.size));
+        facts.push('left untouched — ' + keptReason(out.why));
+      } else {
+        facts.push(bytes(file.size) + '  →  ' + bytes(out.blob.size) + '  (' +
+                   (pct >= 0 ? pct + '% smaller' : Math.abs(pct) + '% larger') + ')');
+        if (resized) facts.push('resized ' + Math.round(out.scale * 100) + '%');
+        if (out.width) facts.push(out.width + '×' + out.height + (resized ? '' : ' kept'));
+        /* the encoder only has a quality dial for JPG and WebP; a PNG is shrunk by
+           cutting its palette, so report the colour count there instead */
+        if (out.format !== 'png' && out.quality) {
+          facts.push('quality ' + Math.round(out.quality * 100));
+        }
+        if (out.colors) facts.push(out.colors + ' colours');
+      }
+      el.querySelector('.nz-sizes').textContent = facts.join('  ·  ');
       el.querySelector('.nz-sizes').className = 'nz-sizes ' + (out.fits ? 'good' : 'warn');
 
       var a = document.createElement('a');
@@ -531,14 +661,29 @@
       results.push({ file: file, out: out, url: url, name: name });
     }
 
+    function keptReason(why) {
+      if (why === 'photo-png') {
+        return 'a photograph stored as PNG cannot shrink without losing detail — JPG or WebP ' +
+               'would be far smaller';
+      }
+      return 're-encoding would not make it smaller';
+    }
+
     function recount(target) {
       var ok = results.filter(function (r) { return r.out.fits; }).length;
       if (!results.length) { summary.textContent = ''; downloadAll.hidden = true; return; }
       var total = results.reduce(function (n, r) { return n + r.out.blob.size; }, 0);
       var before = results.reduce(function (n, r) { return n + r.file.size; }, 0);
-      summary.textContent = ok + ' of ' + results.length + ' under ' +
-        (target / 1024).toFixed(target % 1024 === 0 ? 0 : 1) + ' KB  ·  ' +
-        bytes(before) + ' → ' + bytes(total);
+      var shrunk = results.filter(function (r) { return !r.out.kept; }).length;
+      summary.textContent = mode === 'small'
+        ? (shrunk === results.length
+             ? results.length + ' compressed'
+             : shrunk + ' of ' + results.length + ' compressed') +
+          '  ·  ' + bytes(before) + ' → ' + bytes(total) +
+          (shrunk === 0 ? '  ·  nothing to gain' : '')
+        : ok + ' of ' + results.length + ' under ' +
+          (target / 1024).toFixed(target % 1024 === 0 ? 0 : 1) + ' KB  ·  ' +
+          bytes(before) + ' → ' + bytes(total);
       downloadAll.hidden = false;
     }
 
@@ -547,8 +692,11 @@
     var chain = Promise.resolve();
     function run(reason) {
       if (busy) return;
-      var target = targetBytes();
-      if (!target) { summary.textContent = 'Type a target size in KB first.'; return; }
+      var target = mode === 'size' ? targetBytes() : null;
+      if (mode === 'size' && !target) {
+        summary.textContent = 'Type a target size in KB first.';
+        return;
+      }
       if (!batch.length) return;
 
       var items = batch;
@@ -602,6 +750,16 @@
         if (hasRun) { run('chip'); } else { syncFooter(); }
       });
     });
+
+    /* switching mode is an explicit choice, and after the first run it
+       re-compresses the batch the same way a size change does */
+    modeBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (busy || mode === b.dataset.nzMode) return;
+        setMode(b.dataset.nzMode);
+        if (hasRun) { run('mode'); }
+      });
+    });
     targetInput.addEventListener('change', function () {
       if (hasRun) { run('target'); } else { syncFooter(); }
     });
@@ -636,7 +794,7 @@
     });
 
     if (targetInput.value) setTarget(targetInput.value);
-    syncFooter();
+    setMode(mode);          // paints the selected mode, its panel and the footer
     root.classList.add('nz-ready');
   }
 
