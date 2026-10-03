@@ -2,12 +2,20 @@
 # Docs: https://developers.cloudflare.com/pages/configuration/headers/
 #
 # VERIFIED against the actual pages in this repo on 2026-10-03:
-#   - every page has inline <script> and inline <style> blocks  -> 'unsafe-inline' is required
-#   - inline style="" attributes are present                    -> 'unsafe-inline' for style-src
-#   - the ONLY external network destination is script.google.com (the tester feedback form
-#     POSTs to the Apps Script endpoint with fetch())
+#   - NO executable inline <script> remains. The two that existed (feedback.html's form engine,
+#     index.html's nav + enquiry form) were extracted to /assets/feedback.js and
+#     /assets/home.js, so script-src carries NO 'unsafe-inline'. Mozilla Observatory penalises
+#     'unsafe-inline' in script-src ONLY - that was the last remaining -20.
+#   - <script type="application/ld+json"> blocks stay inline on purpose: they are data, not
+#     executable code, so script-src does not apply to them and crawlers must find them in the HTML.
+#   - style-src still needs 'unsafe-inline': 4 <style> blocks + 34 style="" attributes remain.
+#     Observatory does NOT check style-src, so this costs no points.
+#   - the ONLY external network destination from JS is script.google.com (tester feedback form)
 #   - blob: is used by the image compressor for previews/downloads
-#   - no external fonts, no CDNs, no analytics, no third-party scripts
+#   - Cloudflare Web Analytics injects static.cloudflareinsights.com/beacon.min.js into every
+#     response (zone setting, not this repo) - it must stay allowed in script-src + connect-src,
+#     otherwise the analytics silently stop recording.
+#   - no external fonts, no CDNs
 #
 # HSTS IS SET HERE (as an origin response header) rather than via the zone toggle, so that it is
 # version-controlled with the site and reproducible. IMPORTANT: do NOT also enable the dashboard
@@ -21,7 +29,7 @@
   X-Frame-Options: SAMEORIGIN
   Permissions-Policy: accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://script.google.com https://cloudflareinsights.com; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://script.google.com; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://script.google.com https://cloudflareinsights.com; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://script.google.com; object-src 'none'; upgrade-insecure-requests
 
 # Admin/tester pages: keep them out of search engines at the header level too,
 # independent of the meta robots tag inside the file.
