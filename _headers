@@ -9,15 +9,18 @@
 #   - blob: is used by the image compressor for previews/downloads
 #   - no external fonts, no CDNs, no analytics, no third-party scripts
 #
-# NOTE ON HSTS: it is deliberately NOT set here. It is set once at the zone level
-# (SSL/TLS -> Edge Certificates -> HTTP Strict Transport Security) so that it also covers
-# any future subdomain and is not duplicated.
+# HSTS IS SET HERE (as an origin response header) rather than via the zone toggle, so that it is
+# version-controlled with the site and reproducible. IMPORTANT: do NOT also enable the dashboard
+# toggle (SSL/TLS -> Edge Certificates -> HSTS) - two HSTS headers would be malformed and browsers
+# reject them. Pick one place; this is it. `preload` is deliberately omitted: it is a near-permanent
+# commitment, and it can be added later once the domain has been stable for a while.
 
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: SAMEORIGIN
   Permissions-Policy: accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
   Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://script.google.com; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://script.google.com; object-src 'none'; upgrade-insecure-requests
 
 # Admin/tester pages: keep them out of search engines at the header level too,
