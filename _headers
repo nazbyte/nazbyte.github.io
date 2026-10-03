@@ -21,7 +21,7 @@
   X-Frame-Options: SAMEORIGIN
   Permissions-Policy: accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://script.google.com; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://script.google.com; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://script.google.com; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://script.google.com; object-src 'none'; upgrade-insecure-requests
 
 # Admin/tester pages: keep them out of search engines at the header level too,
 # independent of the meta robots tag inside the file.
