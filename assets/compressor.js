@@ -498,6 +498,11 @@
     var progress    = root.querySelector('[data-nz-progress]');
     var spin        = root.querySelector('[data-nz-spin]');
     var chips       = root.querySelectorAll('[data-nz-preset]');
+    var unitBtns    = root.querySelectorAll('[data-nz-unit-btn]');
+    /* The page carries its own unit: a page headlined "1 MB" opens with MB in the
+       control, not "1024 KB". Everything internally is bytes. */
+    var pageUnit    = (targetInput && targetInput.dataset.nzUnit) === 'mb' ? 'mb' : 'kb';
+    var unit        = pageUnit;
     var sizePanel   = root.querySelector('[data-nz-panel="size"]');
     var smallPanel  = root.querySelector('[data-nz-panel="small"]');
     var modeBtns    = root.querySelectorAll('[data-nz-mode]');
@@ -520,24 +525,70 @@
       syncFooter();
     }
 
+    function unitFactor(u) { return u === 'mb' ? 1048576 : 1024; }
+
+    function targetValue() {
+      var v = parseFloat(targetInput.value);
+      return (isFinite(v) && v > 0) ? v : null;
+    }
+
+    /* The number in the field is in the currently selected unit. A 1 MB page can
+       therefore say "1", and a visitor who switches to KB sees 1024 rather than a
+       target that quietly means something else. */
     function targetBytes() {
-      var kb = parseFloat(targetInput.value);
-      if (!isFinite(kb) || kb <= 0) return null;
-      return Math.round(kb * 1024);
+      var v = targetValue();
+      if (v === null) return null;
+      return Math.round(v * unitFactor(unit));
+    }
+
+    function nice(v) {
+      return Math.round(v * 1000) / 1000;
     }
 
     function targetLabel() {
-      var t = targetBytes();
-      if (!t) return '';
-      return (t % 1024 === 0 ? (t / 1024) : (t / 1024).toFixed(1)) + ' KB';
+      var v = targetValue();
+      if (v === null) return '';
+      return nice(v) + ' ' + unit.toUpperCase();
     }
 
-    function setTarget(kb) {
-      targetInput.value = kb;
+    function markChips() {
+      var t = targetBytes();
       chips.forEach(function (c) {
-        c.classList.toggle('on', parseFloat(c.dataset.nzPreset) === parseFloat(kb));
+        c.classList.toggle('on',
+          t !== null && Math.round(parseFloat(c.dataset.nzPreset) * unitFactor(pageUnit)) === t);
       });
     }
+
+    function setTarget(value) {
+      targetInput.value = value;
+      markChips();
+    }
+
+    /* Switching units keeps the target the visitor already chose: 1024 KB becomes
+       1 MB, and back again. */
+    function setUnit(u, convert) {
+      if (u !== 'kb' && u !== 'mb') return;
+      if (convert && targetValue() !== null && u !== unit) {
+        var bytes = targetBytes();
+        targetInput.value = nice(bytes / unitFactor(u));
+      }
+      unit = u;
+      targetInput.dataset.nzUnit = u;
+      unitBtns.forEach(function (b) {
+        var on = b.dataset.nzUnitBtn === u;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-checked', on ? 'true' : 'false');
+      });
+      markChips();
+    }
+
+    unitBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (busy || b.dataset.nzUnitBtn === unit) return;
+        setUnit(b.dataset.nzUnitBtn, true);
+        if (hasRun) { run('unit'); } else { syncFooter(); }
+      });
+    });
 
     /* The footer carries exactly one primary action at a time: Compress while
        files are waiting, Download all once there are results. */
@@ -792,6 +843,7 @@
 
     chips.forEach(function (c) {
       c.addEventListener('click', function () {
+        if (unit !== pageUnit) setUnit(pageUnit, false);   // chips are page-unit values
         setTarget(c.dataset.nzPreset);
         if (hasRun) { run('chip'); } else { syncFooter(); }
       });
@@ -839,6 +891,8 @@
       });
     });
 
+    targetInput.addEventListener('input', markChips);   // keep the chips honest while typing
+    setUnit(pageUnit, false);                           // the unit this page opens in
     if (targetInput.value) setTarget(targetInput.value);
     setMode(mode);          // paints the selected mode, its panel and the footer
     root.classList.add('nz-ready');

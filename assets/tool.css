@@ -224,6 +224,33 @@ footer{border-top:1px solid var(--line);padding:38px 0;color:var(--faint);font-s
 .nz-tool.nz-busy .nz-chips button{pointer-events:none}
 .btn[disabled]{opacity:.6;cursor:default}
 
+/* ---------- target unit: a page headlined "1 MB" opens in MB, not "1024 KB" ---------- */
+.unitpick{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;
+      vertical-align:-4px;margin-right:6px;background:#fff}
+.unitbtn{background:#fff;border:0;padding:6px 9px;font:600 12.5px/1 var(--font);
+      color:var(--faint);cursor:pointer}
+.unitbtn+.unitbtn{border-left:1px solid var(--line)}
+.unitbtn.on{background:var(--brand-dim);color:var(--brand-hi)}
+
+/* ---------- banded "compress to another size": four groups, not 44 pills ----------
+   A flat wall of 44 links dilutes every one of them, so the groups are disclosure
+   rows and the band holding the current page is the one left open. */
+.sizelinks details.band{border-top:1px solid var(--line);padding:12px 0}
+.sizelinks details.band:first-child{border-top:0;padding-top:0}
+.sizelinks summary{cursor:pointer;font-weight:600;font-size:15px;color:var(--ink);
+      list-style:none;display:flex;align-items:baseline;gap:7px}
+.sizelinks summary::-webkit-details-marker{display:none}
+.sizelinks summary::before{content:"+";color:var(--faint);font-weight:700;width:10px}
+.sizelinks details[open] summary::before{content:"\2212"}
+.sizelinks summary span{color:var(--faint);font-weight:400;font-size:13.5px}
+.sizelinks .bandlinks{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.sizelinks .bandlinks a{border:1px solid var(--line);background:#fff;border-radius:999px;
+      padding:7px 13px;font-size:13.5px;color:var(--muted)}
+.sizelinks .bandlinks a:hover{border-color:var(--brand);color:var(--brand-hi)}
+.sizelinks .bandlinks a.here{background:var(--brand);border-color:var(--brand);color:#fff}
+.bandblock{margin-top:24px}
+.bandblock h3{font-size:15.5px;margin:0 0 10px}
+
 @media (max-width:900px){
   .nz-grid{grid-template-columns:1fr}
   .nz-hero-tool{grid-column:1;grid-row:1}

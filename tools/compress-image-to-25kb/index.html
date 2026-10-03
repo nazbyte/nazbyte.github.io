@@ -6,6 +6,7 @@
 <title>Compress Image to 25 KB Online — Free, No Signup | NazByte</title>
 <meta name="description" content="Compress an image to 25 KB or less in your browser. Free, unlimited, no account and no upload — your files never leave your device.">
 <link rel="canonical" href="https://nazbyte.com/tools/compress-image-to-25kb/">
+<meta name="robots" content="noindex,follow">
 
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="/favicon.png" type="image/png">
@@ -75,10 +76,17 @@
     <div class="nz-field nz-panel-size" data-nz-panel="size">
       <label for="tgt">Compress to</label>
       <div class="kbrow">
-        <input id="tgt" type="number" min="1" step="1" value="25" data-nz-target>
-        <span class="unit">KB or less</span>
+        <input id="tgt" type="number" min="0.1" step="any" value="25"
+               data-nz-unit="kb" data-nz-target>
+        <span class="unit">
+          <span class="unitpick" role="radiogroup" aria-label="Target unit"><button type="button"
+            class="unitbtn on" role="radio" aria-checked="true"
+            data-nz-unit-btn="kb">KB</button><button type="button"
+            class="unitbtn" role="radio" aria-checked="false"
+            data-nz-unit-btn="mb">MB</button></span> or less
+        </span>
       </div>
-      <div class="nz-chips"><button type="button" data-nz-preset="20">20</button><button type="button" data-nz-preset="25" class="on">25</button><button type="button" data-nz-preset="30">30</button><button type="button" data-nz-preset="50">50</button><button type="button" data-nz-preset="100">100</button><button type="button" data-nz-preset="200">200</button><button type="button" data-nz-preset="500">500</button></div>
+      <div class="nz-chips"><button type="button" data-nz-preset="10">10</button><button type="button" data-nz-preset="15">15</button><button type="button" data-nz-preset="20">20</button><button type="button" data-nz-preset="25" class="on">25</button><button type="button" data-nz-preset="30">30</button></div>
     </div>
 
     <div class="nz-field nz-panel-small" data-nz-panel="small" hidden>
@@ -181,9 +189,11 @@
 
   <section>
     <h2>Compress to another size</h2>
-    <p class="muted">Every limit is different. These run on the same engine, so switching is instant.</p>
-    <div class="sizelinks"><a href="../compress-image-to-20kb/">20 KB</a><a href="../compress-image-to-25kb/" class="here">25 KB</a><a href="../compress-image-to-30kb/">30 KB</a><a href="../compress-image-to-50kb/">50 KB</a><a href="../compress-image-to-100kb/">100 KB</a><a href="../compress-image-to-200kb/">200 KB</a><a href="../compress-image-to-500kb/">500 KB</a></div>
-    <p style="margin-top:22px"><a href="../compress-image/">Or compress to any size you type in &rarr;</a></p>
+    <p class="muted">Every limit is different. These run on the same engine, so switching is
+    instant.</p>
+    <div class="sizelinks"><details class="band" open><summary>Small <span>5&ndash;30 KB</span></summary><div class="bandlinks"><a href="../compress-image-to-20kb/">20 KB</a><a href="../compress-image-to-25kb/" class="here">25 KB</a><a href="../compress-image-to-30kb/">30 KB</a></div></details><details class="band"><summary>Medium <span>40&ndash;150 KB</span></summary><div class="bandlinks"><a href="../compress-image-to-40kb/">40 KB</a><a href="../compress-image-to-50kb/">50 KB</a><a href="../compress-image-to-70kb/">70 KB</a><a href="../compress-image-to-80kb/">80 KB</a><a href="../compress-image-to-90kb/">90 KB</a><a href="../compress-image-to-100kb/">100 KB</a></div></details><details class="band"><summary>Large <span>200 KB&ndash;900 KB</span></summary><div class="bandlinks"><a href="../compress-image-to-200kb/">200 KB</a><a href="../compress-image-to-256kb/">256 KB</a><a href="../compress-image-to-300kb/">300 KB</a><a href="../compress-image-to-500kb/">500 KB</a><a href="../compress-image-to-512kb/">512 KB</a></div></details><details class="band"><summary>Megabyte <span>1&ndash;10 MB</span></summary><div class="bandlinks"><a href="../compress-image-to-1mb/">1 MB</a><a href="../compress-image-to-2mb/">2 MB</a><a href="../compress-image-to-5mb/">5 MB</a></div></details></div>
+    <p style="margin-top:22px"><a href="../compress-image/">Or compress to any size you type in
+    &rarr;</a></p>
   </section>
 
   <section class="faq">
